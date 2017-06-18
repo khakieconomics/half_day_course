@@ -1,0 +1,73 @@
+--- 
+title: "A brief introduction to econometrics in Stan"
+author: "James Savage"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: 
+    bookdown::gitbook: default
+    includes:
+        in_header: preamble.tex
+        latex_engine: xelatex
+        citation_package: natbib
+        keep_tex: yes
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+description: "This course provides an introduction to Bayesian modeling, and examples of the common techniques used in many fields of econometrics."
+---
+
+# About {-}
+
+These notes are for a half-day short course in econometrics using Stan. The main reason to learn
+Stan is to fit models that are difficult to fit using other software. Such models might include
+models with high-dimensional random effects (about which we want to draw inference), models 
+with complex or multi-stage likelihoods, or models with latent data structures. A second reason
+to learn Stan is that you want to conduct Bayesian analysis on workhorse models; perhaps you have
+good prior information, or are attracted to the possibility of making probabilistic statements about
+predictions and parameter estimates. 
+
+While this second reason is worthwhile, it is not the aim of this course. This course introduces 
+a few workhorse models in order to give you the skills to build richer models that extract the most
+information from your data. There are three sessions: 
+
+1. An introduction to Bayesian reasoning, MCMC/HMC, and Stan. 
+2. An introduction to Modern Statistical Workflow, using a time-series model as the example.
+3. Applying the workflow to a more complex model---in this case, aggregate random coefficients logit. 
+
+These notes have a few idiosyncracies: 
+
+> Tricks and shortcuts will look like this
+
+The code examples live in the `models/` folder of the book's repository, (https://github.com/khakieconomics/shortcourse/models). 
+
+We use two computing languages in these notes. The first is Stan, a powerful modeling language
+that allows us to express and estimate probabilistic models with continuous parameter spaces. 
+Stan programs are prefaced with their location in the `models/` folder, like so:
+
+```
+// models/model_1.stan
+// ...  model code here
+```
+
+We also use the `R` language, for data preparation, calling Stan models, and visualising model
+results. R programs live in the `scripts/` folder; they typically read data from the `data/` folder, 
+and liberally use `magrittr` syntax with `dplyr`. If this syntax is unfamiliar to you, it is worth
+taking a look at the [excellent vignette](https://cran.rstudio.com/web/packages/dplyr/vignettes/introduction.html)
+to the `dplyr` package. Like the Stan models, all R code in the book is prefaced with its location
+in the book's directory. 
+
+```{r}
+# scripts/intro.R
+# ... data work here
+```
+
+It is not necessary to be an R aficionado to make the most of these notes. Stan programs can be called from within
+Stata, Matlab, Mathematica, Julia and Python. If you are more comfortable using those languages than R for data
+preparation work, then you should be able to implement all the models in this book using those interfaces. Further
+documentation on calling Stan from other environments is available at [http://mc-stan.org/interfaces/](http://mc-stan.org/interfaces/).
+
+While Stan can be called quite easily from these other programming environments, the R implementation is more 
+fully-fleshed---especially for model checking and post-processing. For this reason we use the R implementation
+of Stan, `rstan` in this book.
+

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>A brief introduction to econometrics in Stan</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta name="description" content="This course provides an introduction to Bayesian modeling, and examples of the common techniques used in many fields of econometrics.">
+  <meta name="generator" content="bookdown 0.3.5 and GitBook 2.6.7">
+
+  <meta property="og:title" content="A brief introduction to econometrics in Stan" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="This course provides an introduction to Bayesian modeling, and examples of the common techniques used in many fields of econometrics." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="A brief introduction to econometrics in Stan" />
+  
+  <meta name="twitter:description" content="This course provides an introduction to Bayesian modeling, and examples of the common techniques used in many fields of econometrics." />
+  
+
+<meta name="author" content="James Savage">
+
+
+<meta name="date" content="2017-06-18">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+<link rel="prev" href="index.html">
+<link rel="next" href="msw.html">
+
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>About</a></li>
+<li class="chapter" data-level="1" data-path="intro.html"><a href="intro.html"><i class="fa fa-check"></i><b>1</b> An introduction to Stan</a><ul>
+<li class="chapter" data-level="1.1" data-path="intro.html"><a href="intro.html#why-might-you-want-to-start-learning-bayesian-methods"><i class="fa fa-check"></i><b>1.1</b> Why might you want to start learning Bayesian methods?</a><ul>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-1-incorporating-knowledge-from-outside-the-data"><i class="fa fa-check"></i>Benefit 1: Incorporating knowledge from outside the data</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-2-combining-sources-of-information"><i class="fa fa-check"></i>Benefit 2: Combining sources of information</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-3-dealing-with-uncertainty-consistently-in-model-predictions"><i class="fa fa-check"></i>Benefit 3: Dealing with uncertainty consistently in model predictions</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-4-regularizing-richly-parameterized-models"><i class="fa fa-check"></i>Benefit 4: Regularizing richly parameterized models</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-5-doing-away-with-tests"><i class="fa fa-check"></i>Benefit 5: Doing away with tests</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="intro.html"><a href="intro.html#models-and-inference"><i class="fa fa-check"></i><b>1.2</b> Models and inference</a></li>
+<li class="chapter" data-level="1.3" data-path="intro.html"><a href="intro.html#why-use-stan"><i class="fa fa-check"></i><b>1.3</b> Why use Stan?</a></li>
+<li class="chapter" data-level="1.4" data-path="intro.html"><a href="intro.html#background-bayes-rule-likelihood-and-priors"><i class="fa fa-check"></i><b>1.4</b> Background: Bayes rule, likelihood and priors</a><ul>
+<li class="chapter" data-level="1.4.1" data-path="intro.html"><a href="intro.html#likelihoodlog-likelihood"><i class="fa fa-check"></i><b>1.4.1</b> Likelihood/log likelihood</a></li>
+<li class="chapter" data-level="1.4.2" data-path="intro.html"><a href="intro.html#so-what-does-the-likelhood-mean"><i class="fa fa-check"></i><b>1.4.2</b> So what does the likelhood mean?</a></li>
+<li class="chapter" data-level="1.4.3" data-path="intro.html"><a href="intro.html#prior-distributions"><i class="fa fa-check"></i><b>1.4.3</b> Prior distributions</a></li>
+<li class="chapter" data-level="1.4.4" data-path="intro.html"><a href="intro.html#bayes-rule"><i class="fa fa-check"></i><b>1.4.4</b> Bayes rule</a></li>
+<li class="chapter" data-level="1.4.5" data-path="intro.html"><a href="intro.html#enter-bayes"><i class="fa fa-check"></i><b>1.4.5</b> Enter Bayes</a></li>
+<li class="chapter" data-level="1.4.6" data-path="intro.html"><a href="intro.html#posterior-prediction-and-posterior-density"><i class="fa fa-check"></i><b>1.4.6</b> Posterior prediction and posterior density</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="intro.html"><a href="intro.html#a-quick-introduction-to-hamiltonian-monte-carlo"><i class="fa fa-check"></i><b>1.5</b> A quick introduction to Hamiltonian Monte Carlo</a></li>
+<li class="chapter" data-level="1.6" data-path="intro.html"><a href="intro.html#a-tour-of-a-stan-program"><i class="fa fa-check"></i><b>1.6</b> A tour of a Stan program</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="msw.html"><a href="msw.html"><i class="fa fa-check"></i><b>2</b> Modern Statistical Workflow</a></li>
+<li class="chapter" data-level="3" data-path="vsb.html"><a href="vsb.html"><i class="fa fa-check"></i><b>3</b> A more difficult model</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">A brief introduction to econometrics in Stan</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="intro" class="section level1">
+<h1><span class="header-section-number">Chapter 1</span> An introduction to Stan</h1>
+<div id="why-might-you-want-to-start-learning-bayesian-methods" class="section level2">
+<h2><span class="header-section-number">1.1</span> Why might you want to start learning Bayesian methods?</h2>
+<p>Learning Bayesian modeling does require a time investment. If you build and estimate statistical models for a living, it is probably an investment worth making, but we should be very explicit about the benefits (and costs) up-front. The benefits are many. Using Bayesian methods, we can take advantage of information that does not necessarily exist in our data (or model structure) in estimating our model. We can combine sources of information in a simple, coherent fashion. Uncertainty in our predictions automatically incorporates uncertainty in parameter estimates. We can define models that are arbitrarily rich—potentially with more parameters than we have data-points— and still expect coherent parameter estimates. We don’t use tests; instead we just check the implied probabilities of outcomes of interest in our estimated model, whose parameters we can give probabilistic interpretations. And perhaps most importantly, using Bayesian methods forces us to understand our models far more deeply than with canned routines.</p>
+<p>These benefits don’t come free. The approach we advocate in this book—estimating models using full Markov Chain Monte Carlo—can appear slow. Learning Bayesian techniques, and a new programming language, is costly. And some fields have strong frequentist cultures, making communication of Bayesian results an important part of your work. We feel these costs are small relative to the potential gains.</p>
+<p>Let’s illustrate these benefits with examples. These examples are from real-world applied work by ourselves and our colleagues; hopefully you will see analogies with your own work.</p>
+<div id="benefit-1-incorporating-knowledge-from-outside-the-data" class="section level3 unnumbered">
+<h3>Benefit 1: Incorporating knowledge from outside the data</h3>
+<p>When we run a field experiment, we typically want to evaluate the impact of some experimental <em>treatment</em> on an outcome. This impact is known as a <em>treatment effect</em>. Experiments can be costly do perform, limiting the number of observations that we can collect. Consequently, in these small-data studies it is common to have very imprecise estimates of the treatment effect.</p>
+<p>Bayesian analysis of the experiment can help when there is more information available about the the treatment effect than exists the observations from our experiment, as would be the case of there having been previous studies of the same treatment effect. These previous studies’ results can be incorporated into our study using what is known as a <em>hierarchical prior</em>, resulting in more precise estimates of the treatment effect.</p>
+<p>For example, imagine you are an education researcher evaluating the impact of a trendy new educational teaching method on test scores. You run a randomized experiment on seventy students at one school and learn that the intervention improved test scores by 34 points on a scale from to 800. Because of the fairly small sample size, this estimate has a standard error of 23.5, and is not “statistically significant” with a p-value of 0.15 (greater than the arbitrary 0.05 threshold used for declaring statistical significance in many fields). This is consistent with a 95% confidence interval of the estimate of (-12.8 to 80.9). If you were to roll out the intervention on a large cohort of students, what would you expect the treatment effect to be? 0—our estimate is not statistically significant? 34? Some other number?</p>
+<p>Now suppose that because this educational intervention is trendy, it is being experimented on by other researchers. You find that these researchers have achieved the following estimates of the treatment effect from the same treatment (this is Rubin’s famous 8 Schools data <span class="citation">(Rubin <a href="#ref-rubin8schools">1981</a>)</span>):</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">School</th>
+<th align="right">Treatment effect</th>
+<th align="right">Standard error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">A</td>
+<td align="right">28.39</td>
+<td align="right">14.9</td>
+</tr>
+<tr class="even">
+<td align="left">B</td>
+<td align="right">7.94</td>
+<td align="right">10.2</td>
+</tr>
+<tr class="odd">
+<td align="left">C</td>
+<td align="right">-2.75</td>
+<td align="right">16.3</td>
+</tr>
+<tr class="even">
+<td align="left">D</td>
+<td align="right">6.82</td>
+<td align="right">11.0</td>
+</tr>
+<tr class="odd">
+<td align="left">E</td>
+<td align="right">-0.64</td>
+<td align="right">9.4</td>
+</tr>
+<tr class="even">
+<td align="left">F</td>
+<td align="right">0.63</td>
+<td align="right">11.4</td>
+</tr>
+<tr class="odd">
+<td align="left">G</td>
+<td align="right">18.01</td>
+<td align="right">10.4</td>
+</tr>
+<tr class="even">
+<td align="left">H</td>
+<td align="right">12.16</td>
+<td align="right">17.6</td>
+</tr>
+</tbody>
+</table>
+<p>After seeing these other study results of the same intervention, how might your expectations of a roll-out of the intervention change? It turns out that we can use these study results in re-analyzing our own data in order to get a more precise estimate of the treatment effect in our own study. Doing so reduces the 95% “credibility interval”.</p>
+</div>
+<div id="benefit-2-combining-sources-of-information" class="section level3 unnumbered">
+<h3>Benefit 2: Combining sources of information</h3>
+<p>A similar type of analysis to the is to use Bayesian methods to combine sources of information, as in a meta-analysis or political poll aggregation. The aim of this type of research is to estimate a statistic—for instance, the distribution of political preferences, or a treatment effect—you would expect to find in as-yet untested populations using previous studies as the data source, not the underlying data. The central notion is that these previous studies are noisy estimates of some underlying statistic that applies to the whole population. They are noisy partly because of sampling variability, but also because the studies might differ systematically from one another (political pollsters using different questions, for example). An important assumption is that together, these studies are not systematically biased once we account for observable differences between them.</p>
+<p>A recent example of this type of analysis is in <span class="citation">(Meager <a href="#ref-meager2016aggregating">2016</a>)</span>, who uses hierarchical Bayesian modeling to obtain estimates of the generalizable treatment effects (and quantile effects) of microcredit expansions on various household measures of financial success.</p>
+<p>The study makes several contributions, but two highlight the power of a (hierarchical) Bayesian approach. The first is that a biproduct of the Bayesian aggregation procedure is an estimate of the generalizability of a given previous study. That is, the procedure tells us how much we can expect to learn about the impact of a yet-untried microcredit expansion from a given experiment. The second is that using a hierarchical Bayesian aggregation procedure gives us new estimates for the treatment effects in the previous studies. Remember: the estimates from those previous studies are noisy. The technique reduces the noise in these estimates by “borrowing power” from other studies. In the report, several of the “statistically significant” findings in the previous studies lose their “significance” once we adjust them for the fact that similar studies find much smaller (or zero) effects. In a world in which costly policy decisions might be influenced by false discoveries, this feature is appealing.</p>
+</div>
+<div id="benefit-3-dealing-with-uncertainty-consistently-in-model-predictions" class="section level3 unnumbered">
+<h3>Benefit 3: Dealing with uncertainty consistently in model predictions</h3>
+<p>We often use models to generate predictions or forecasts. There are several types of uncertainty that we ought to be concerned with. The first is sampling variability: even if we have the “perfect model” (we don’t believe such a thing exists) there will remain variation in what we are predicting, either because of pure randomness or measurement error. If we were to use the model for predictions, we should expect the model to be right <em>on average</em>, but not right in every instance.</p>
+<p>The second source of uncertainty is uncertainty in the unknown parameters in our model. A model itself typically combines “knowns” and unknown variables, and the goal of estimating a model is to draw inference about the value of the unknowns. So long as we only have a limited number of observations, we will be unsure of the precise values of the unknowns; this contributes to uncertainty in our predictions.</p>
+<p>The third source of uncertainty is uncertainty about whether the model is the right model for the job— is it correctly specified, and are we modeling a stationary (or non-changing) set of relationships? If the model is improperly specified or if the fundamental relationships of the system are changing, our model will not perform well. Importantly, this type of uncertainty is not represented by predictive intervals—it is therefore prudent to treat predictive intervals as the <em>minimum</em> amount of uncertainty that we should have over the outcome.</p>
+<p>By using Bayesian methods, we automatically deal with the first and second sources of uncertainty, without resorting to workarounds. Non-Bayesians can do this as well (for example, by boostrapping), but it is not an inherent part of the procedure. But neither Bayesian nor non-Bayesian techniques deal well with the problem of poorly-specificed models and “model non-stationarity”. So what do we do? Using a well thought-through workflow and “generative reasoning” (see <a href="msw.html#msw">2</a>) can help us iterate towards a specification that describes our data on hand well. Unfortunately, model non-stationarity is a difficult, philosophical problem. There are no quick fixes.</p>
+</div>
+<div id="benefit-4-regularizing-richly-parameterized-models" class="section level3 unnumbered">
+<h3>Benefit 4: Regularizing richly parameterized models</h3>
+<p>Many important predictive/control variables have high dimensionsionality. For example, imagine you are building a model to predict whether the a package deliverd from town A to B will be delivered late. An important predictive variable will be the origin and destination towns. In most countries, there are a very large number of post-codes, whose values have no intrinsic meaning (so we cannot use these as a numerical control variable). How can we use these values to generate better predictions? And how should we learn from towns with very few observations vis-à-vis towns with many?</p>
+<p>How do we deal with this problem without using Bayesian methods? One popular technique is to “one-hot” encode the categorical predictors, so that our data go from</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">zip_code</th>
+<th align="left">other_data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">11111</td>
+<td align="left">…</td>
+</tr>
+<tr class="even">
+<td align="left">11112</td>
+<td align="left">…</td>
+</tr>
+<tr class="odd">
+<td align="left">11113</td>
+<td align="left">…</td>
+</tr>
+<tr class="even">
+<td align="left">11114</td>
+<td align="left">…</td>
+</tr>
+<tr class="odd">
+<td align="left">…</td>
+<td align="left">…</td>
+</tr>
+</tbody>
+</table>
+<p>to</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">zip_code 11111</th>
+<th align="left">zip_code 11112</th>
+<th align="left">zip_code 11113</th>
+<th align="left">zip_code 11114</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td align="left">0</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+</tr>
+<tr class="odd">
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">1</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">1</td>
+</tr>
+<tr class="odd">
+<td align="left">…</td>
+<td align="left">…</td>
+<td align="left">…</td>
+<td align="left">…</td>
+</tr>
+</tbody>
+</table>
+<p>And then continue apace. The problem with such an approach is that our parameter space becomes extremely large, and we might end up doing “noise-mining”—discovering relationships where there are none, simply through bad luck. A trick known as “regularization” can help prevent this, and is considered good practice when you have a model with many variables. It does so by “penalizing” parameter estimates that are not estimated precisely—for instance, those zip codes with very few observations—“shrinking” the parameter estimates towards zero (or some other value). Regularization like this is widely used in machine learning. A difficulty is that most canned routines that implement regularization do not allow for easy incorporation of uncertainty in the parameter estimates.</p>
+<p>Bayesian methods also employ regularization, through the use of priors. This is because our parameter estimates will always be between the likelihood estimate (typically, the estimates you’ll get from a non-Bayesian approach) and our priors. Strictly, priors should encode the information that we have about parameter estimates before we estimate a model. One valuable type of prior information that we have is “regularization works!” or “mean reversion happens!” These partly motivate the approaches we advocate for modeling hierarchical and panel data, especially the use of hierarchical priors.</p>
+</div>
+<div id="benefit-5-doing-away-with-tests" class="section level3 unnumbered">
+<h3>Benefit 5: Doing away with tests</h3>
+<p>In frequentist statistics, inference is performed through the use of tests. Testing is normally the process of combining model and data to come up with a <em>test statistic</em>, which will have some large-sample limiting distribution <em>under the assumption that the null hypothesis is correct</em>. We then compare the test statistic to that limiting distribution to determine whether there exists sufficient evidence to reject the null hypothesis.</p>
+<p>Done well, testing can yield useful insights and help guide modeling. But as an approach to workflow and science, testing is difficult to learn and remember, easy to abuse, and with limited data, can result in many erroneous conclusions.</p>
+<p>In Bayesian analysis, we do not use tests. All inference is conducted by analysing our fitted model (the <em>posterior</em>), which is typically a matrix of draws from the joint distribution of all parameters and predictions. The posterior has a probabilistic interpretation, and consequently if we want to make a probabilistic statement about our fitted model, we only need to count the number of draws from the posterior for which a condition holds, and divide it by the number of draws.</p>
+<p>This is a far more intuitive and easy-to-use way of conducting inference.</p>
+</div>
+</div>
+<div id="models-and-inference" class="section level2">
+<h2><span class="header-section-number">1.2</span> Models and inference</h2>
+<p>The type of modeling we are doing here is known as <em>generative modeling</em>, typically with fairly strong assumptions about the parametric sampling distributions that give rise to our data. For instance, we might have a normal linear regression model</p>
+<p><span class="math display">\[
+y_{i} = X_{i}\beta + \epsilon\mbox{ where } \epsilon \sim \mbox{Normal}(0,\, \sigma)
+\]</span></p>
+<p>Which for many scale-location type distributions, can be written as</p>
+<p><span class="math display">\[
+y_{i}  \sim \mbox{Normal}(X_{i}\beta ,\, \sigma)
+\]</span></p>
+<p>Which simply says that <span class="math inline">\(y_{i}\)</span> is generated according to a normal distribution with a location <span class="math inline">\(X_{i}\beta\)</span>, and with residuals of average size <span class="math inline">\(\sigma\)</span>. In the case of the normal distribution, the location is the mean or expected value, and the scale of the residuals is the residual standard deviation. This is the <em>generative model</em>—the model which we say gives rise to_generates_ the data <span class="math inline">\(y\)</span>. (Nb. in this case we refer to <span class="math inline">\(X\)</span> as being <em>conditioning information</em>, ie data that is not generated within the model; if we do not know its value out of sample we should be modeling it too!) In this course we’ll restrict ourselves to generative models where the generative distribution has a known parametric form.</p>
+<p>Don’t be put off by the choice of a normal distribution. If we thought that large deviations from the expected value were not unexpected, we might use a fat-tailed distribution, like</p>
+<p><span class="math display">\[
+y_{i}  \sim \mbox{Student&#39;s t}(\nu, X_{i}\beta ,\, \sigma)
+\]</span> or</p>
+<p><span class="math display">\[
+y_{i}  \sim \mbox{Cauchy}(X_{i}\beta ,\, \sigma)
+\]</span></p>
+<p>In any case, the above are <em>models</em>. The models themselves have <em>fixed</em> unknown parameters and, possibly, <em>fixed</em> latent variables, about which we want to conduct probabilistic inference. That is, we want to be able to make probabilistic statements about the true (out of sample) values of the the fixed values of unknown parameters and latent variables.</p>
+<p>It is common to use different techniques to do this, with the technique depending on the model. For example,</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Model</th>
+<th align="left">Estimation technique</th>
+<th align="left">Inference method</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Normal linear model</td>
+<td align="left">OLS Maximum likelihood IV/GMM</td>
+<td align="left">Appeal to sampling theory/pray</td>
+</tr>
+<tr class="even">
+<td align="left">Generalized linear model</td>
+<td align="left">Maximum likelihood/GMM</td>
+<td align="left">Bootstrap</td>
+</tr>
+<tr class="odd">
+<td align="left">Hierarchical linear model</td>
+<td align="left">Expectation maximization (EM)/MCMC</td>
+<td align="left">Approximation to Bayesian/ Genuine Bayes</td>
+</tr>
+<tr class="even">
+<td align="left">Mixed logit</td>
+<td align="left">Simulated likelihood</td>
+<td align="left">Bootstrap</td>
+</tr>
+<tr class="odd">
+<td align="left">Aggregate mixed logit</td>
+<td align="left">BLP/GMM</td>
+<td align="left">Bootstrap while reading War and Peace</td>
+</tr>
+<tr class="even">
+<td align="left">State-space models</td>
+<td align="left">Kalman filter/particle filters/sequential Bayes</td>
+<td align="left">Built into method</td>
+</tr>
+<tr class="odd">
+<td align="left">Neural network</td>
+<td align="left">Gradient descent with backpropagation/Variational Bayes</td>
+<td align="left">Only care about predictions</td>
+</tr>
+<tr class="even">
+<td align="left">Gaussian process</td>
+<td align="left">Maximum likelihood/variational Bayes/MCMC</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<p>This distinction between models and estimation procedures probably feels quite comfortable for economists. In other fields, particularly nonparametric machine learning, there is no generative model, and the estimation procedure and “model” are one and the same.</p>
+<p>The point of Stan is to allow us to express a wide range of probability models, such as those above. Once we have expressed the generative model and collected our data, we can use a variety of techniques to estimate the parameters of these models. In principle we can fit models that do not make use of prior information, which corresponds to the maximum likelihood estimate. But normally we’ll find it more useful to use prior information, in which case we’ll be estimating models using <em>Bayesian techniques</em>.</p>
+<p>Stan implements three cutting-edge estimation methods:</p>
+<ol style="list-style-type: decimal">
+<li><p>NUTS, a variety of Hamiltonian Monte Carlo. This is the default method, and provides amazingly robust estimation of arbitrarily complex models. The only downside is that it can take a little while to run, especially on larger datasets. There are ongoing efforts to speed it up. We’ll provide a very high-level conceptual background below.</p></li>
+<li><p>Variational Bayes. This method approximates the (unconstrained) posterior by minimizing the KL divergence between the true posterior and a Gaussian proposal. Because it’s just an optimization problem, it works more quickly than NUTS. But the quality of the estimates aren’t as robust. Yet for some models, in particular, neural networks, this is less of a concern.</p></li>
+<li><p>Optimization. Stan has three optimizers, a simple Newton method, BFGS, and L-BFGS (which uses less memory and so scales to bigger parameter spaces). These can be used to find the maximum likelihood or penalized likelihood estimates to our models.</p></li>
+</ol>
+</div>
+<div id="why-use-stan" class="section level2">
+<h2><span class="header-section-number">1.3</span> Why use Stan?</h2>
+<p>Once you’ve accepted that you want to have the option of using Bayesian methods to fit your models, you’re left with a choice of how to do it. Roughly, you have a few options:</p>
+<ul>
+<li>Hand-code a sampler in your scientific language of choice (Julia or C++ good options). Hard! But good for niche uses, a la FRBNY’s DSGE model.</li>
+<li>Use old-school Gibbs sampling software like BUGS or JAGS. Easy, but limited in the models you can express/size of the parameter space.</li>
+<li>New-school software, including Stan and PyMC3. These are very similar pieces of software, with the main difference being that Stan ports across languages (R, Python, Matlab, Julia, Mathematica, Stata and the command line), whereas PyMC3 is a package for Python. If you’re a die-hard Python developer, you might prefer using PyMC3.</li>
+</ul>
+<p>Stan is definitely one of the better contenders among these. It is not the right tool for all jobs, but it is the best tool for many. The jobs where Stan dominates tend to look like:</p>
+<ul>
+<li>Continuous parameter space. Stan doesn’t estimate discrete parameters (though many discrete parameters can be marginalized out)</li>
+<li>High dimensioned parameter space, as in latent data or hierarchical models—especially when ratio of the number of parameters to number of observations is high</li>
+<li>Peculiar likelihoods</li>
+<li>Useful prior information</li>
+<li>Not standard models (Run-of-the-mill models often have well-implemented canned routines elsewhere).</li>
+<li>Because it’s fun and helps you think better.</li>
+</ul>
+</div>
+<div id="background-bayes-rule-likelihood-and-priors" class="section level2">
+<h2><span class="header-section-number">1.4</span> Background: Bayes rule, likelihood and priors</h2>
+<p><em>Bayesian inference is hard in the sense that thinking is hard.</em> <em>- Don Berry</em></p>
+<p>Fitting a model using Bayesian techniques involves two steps. The first is working out a likelihood for our data given a set of unknowns, normally within a parametric framework. Recall, we use the term “data” to refer to any variables whose values we do not know out of sample. The second step is to impose prior distributions over the unknowns in the model. If a model is well-posed, the likelihood can be evaluated, and the priors are proper (integrate to 1), then Stan should be able to fit the model. Let’s discuss a bit what these terms mean.</p>
+<div id="likelihoodlog-likelihood" class="section level3">
+<h3><span class="header-section-number">1.4.1</span> Likelihood/log likelihood</h3>
+<p>Let’s say we have a very simple linear model of <span class="math inline">\(y\)</span> with a single covariate <span class="math inline">\(x\)</span>. <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\sigma\)</span> are the model’s parameters.</p>
+<p><span class="math display">\[
+y_{i} = \alpha + \beta x_{i} + \epsilon_{i}
+\]</span></p>
+<p>with <span class="math inline">\(\epsilon_{i} \sim \mbox{N}(0, \sigma)\)</span>. This is the same as saying that</p>
+<p><span class="math display">\[
+y_{i} \sim \mbox{N}(\alpha + \beta x_{i}, \sigma)
+\]</span></p>
+<p>This is the model we are saying <em>generates</em> the data. It has three unknowns, <span class="math inline">\(\alpha\)</span>, <span class="math inline">\(\beta\)</span> and <span class="math inline">\(\sigma\)</span>. What we’d ideally want is some way of scoring various combinations of these unknowns so that the score is high when the model describes the data well, and low when it does not. One such way of creating a score is to evaluate the <em>likelihood</em> of the data given the parameters.</p>
+<p>Let’s say we propose a set of parameters, <span class="math inline">\(\alpha = 2\)</span>, <span class="math inline">\(\beta = .5\)</span> and <span class="math inline">\(\sigma = 1\)</span> and we have an obervation <span class="math inline">\(y_{i} = 1,\, x_{i} = 1\)</span>. Given the parameters and <span class="math inline">\(x_{i}\)</span> we know that the outcomes <span class="math inline">\(y\)</span> should be distributed as</p>
+<p><span class="math display">\[
+y_{i} \sim \mbox{N}(\alpha + \beta x_{i}, \sigma)
+\]</span></p>
+<p>which might look like this:</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-5-1.png" width="576" /></p>
+<p>Now we ask: what was the density at the <em>actual</em> outcome <span class="math inline">\(y_{i}\)</span>?</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-6-1.png" width="576" /></p>
+<p>The value of the density at an observed outcome is the <em>likelihood contribution</em> <span class="math inline">\(f(y_{i} | x_{i}, a, b, s)\)</span> of a single datapoint. If we assume (conditional) independence of the draws, the sample likelihood of all data is the <em>product</em> of all the individual out of sample likelihoods <span class="math inline">\(\prod_{i = 1}^{N}f(y_{i} | x_{i}, a, b, s)\)</span>.</p>
+<p>You can probably see the problem here—for reasonably large spreads of the data, the value of the predictive density for a datapoint is typically less than 1, and the product of many such datapoints will be an extremely small number. This might give us numerical issues. One way around this is to take the log of the likelihood—the Log Likelihood. Because the log of numbers in (0, 1) are negative numbers large in absolute value, the sum of these numbers will also have a large absolute value, so we’ll not get numerical issues in computation.</p>
+<p><span class="math display">\[
+\log\left( \prod_{i = 1}^{N}f(y_{i} | x_{i}, a, b, s)\right) = \sum_{i = 1}^{N}\log(f(y_{i} | x_{i}, a, b, s))
+\]</span></p>
+</div>
+<div id="so-what-does-the-likelhood-mean" class="section level3">
+<h3><span class="header-section-number">1.4.2</span> So what does the likelhood mean?</h3>
+<p>Log likelihood is a confusing concept to beginners as the values of the numbers aren’t easily interpretable. You might run the analysis and get a number of -3477 and ask “is that good? Bad? What does it mean?” These numbers are more meaningful when conducting model comparison, that is, we get the out of sample log likelihood for two different models. Then we can compare them. The usefulness of this approach is best illustrated with an example.</p>
+<p>Imagine that we have an outlier—rather than <span class="math inline">\(y_{j} = 1\)</span> as in the image above, it is -10. Under the proposed model, we’re essentially saying that the such an outcome is all but impossible. The probability of observing an observation that low or lower is 3.732564310^{-36}. The density of such a point would be 4.695195410^{-35}—a very small number. But its log is large in absolute value: -79.0439385. Compare that with the log likelihood of the original <span class="math inline">\(y_{j} = 1\)</span>: -2.0439385. An outlier penalizes the log likelhood far more than a point at the mode.</p>
+<p>This idea helps us do good modeling: we want to give positive weight to outcomes that happen, and no weight to impossible outcomes.</p>
+<p><strong>Maximum likelihood</strong></p>
+<p>Maximum likelihood estimators are simple: if the (log) likelihood is a unidimensional score of how well the data fit the model for a (potentially large) number of parameters, then we can simply run an optimizer that attempts to maximize this score by varying the values of the parameters. Such an estimator is called the maximum likelihood estimator.</p>
+</div>
+<div id="prior-distributions" class="section level3">
+<h3><span class="header-section-number">1.4.3</span> Prior distributions</h3>
+<p>Prior distributions summarize our information about the values of parameters <em>before</em> seeing the data. For the uninitiated, this is the scary bit of building a Bayesian model, often because of fears of being biased, or having a poor understanding of how exactly the parameter influences the model.</p>
+</div>
+<div id="bayes-rule" class="section level3">
+<h3><span class="header-section-number">1.4.4</span> Bayes rule</h3>
+</div>
+<div id="enter-bayes" class="section level3">
+<h3><span class="header-section-number">1.4.5</span> Enter Bayes</h3>
+<p>There are two big issues with the sort of analysis above:</p>
+<ol style="list-style-type: decimal">
+<li>When we have limited observations, we don’t want to rely on asymptotics.</li>
+<li>We are not certain about the values of our parameters, and we’d like the uncertainty to carry through to our model comparison.</li>
+</ol>
+<p>By using Bayesian inference, we are able to avoid these issues in model comparison.</p>
+</div>
+<div id="posterior-prediction-and-posterior-density" class="section level3">
+<h3><span class="header-section-number">1.4.6</span> Posterior prediction and posterior density</h3>
+<p>In theory, our posterior <span class="math inline">\(p(\theta | y)\)</span> is an abstract distribution; in practice, it’s a matrix of data, where each column corresponds to a parameter, and each row a draw from <span class="math inline">\(p(\theta | y)\)</span>. For instance, the first five rows of our posterior matrix might look like:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">a</th>
+<th align="right">b</th>
+<th align="right">sigma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2.08</td>
+<td align="right">0.53</td>
+<td align="right">1.12</td>
+</tr>
+<tr class="even">
+<td align="right">1.99</td>
+<td align="right">0.58</td>
+<td align="right">0.94</td>
+</tr>
+<tr class="odd">
+<td align="right">2.00</td>
+<td align="right">0.49</td>
+<td align="right">0.94</td>
+</tr>
+<tr class="even">
+<td align="right">1.88</td>
+<td align="right">0.56</td>
+<td align="right">0.91</td>
+</tr>
+<tr class="odd">
+<td align="right">2.00</td>
+<td align="right">0.45</td>
+<td align="right">1.09</td>
+</tr>
+</tbody>
+</table>
+<p>Each of these parameter combinations implies a different predictive distribution. Consequently, they also imply different out-of-sample likelihoods for our out of sample datapoint <span class="math inline">\(y_{j} = 1,x_{j} = 1\)</span>. This is illustrated for 30 posterior replicates below.</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-8-1.png" width="576" /></p>
+<p>The density of the out-of-sample data across posterior draws is known as the (out of sample) <em>log posterior density</em> of a datapoint. Unlike the out of sample likelihood, we are uncertain of its value and need to perform inference. To illustrate this, let’s look at a histogram of the log posterior density in the above example (but with 500 replicates, not 30):</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-9-1.png" width="576" /></p>
+<p>Note that the log posterior density can be evaluated <em>for each datapoint</em>; if we have many datapoints for which we want to evaluate the LPD we simply need to evaluate it for each, and sum across all datapoints.</p>
+</div>
+</div>
+<div id="a-quick-introduction-to-hamiltonian-monte-carlo" class="section level2">
+<h2><span class="header-section-number">1.5</span> A quick introduction to Hamiltonian Monte Carlo</h2>
+</div>
+<div id="a-tour-of-a-stan-program" class="section level2">
+<h2><span class="header-section-number">1.6</span> A tour of a Stan program</h2>
+
+</div>
+</div>
+<h3> A more difficult model</h3>
+<div id="refs" class="references">
+<div id="ref-rubin8schools">
+<p>Rubin, D. 1981. “Estimation in Parallel Randomized Experiments.” <em>Journal of Education Statistics</em> 6. American Educational Research Association; American Statistical Association: 377–401.</p>
+</div>
+<div id="ref-meager2016aggregating">
+<p>Meager, Rachael. 2016. “Aggregating Distributional Treatment Effects: A Bayesian Hierarchical Analysis of the Microcredit Literature.”</p>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="msw.html" class="navigation navigation-next " aria-label="Next page""><i class="fa fa-angle-right"></i></a>
+
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"google": false,
+"weibo": false,
+"instapper": false,
+"vk": false,
+"all": ["facebook", "google", "twitter", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"download": ["Shortcourse.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    if (location.protocol !== "file:" && /^https?:/.test(script.src))
+      script.src  = script.src.replace(/^https?:/, '');
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

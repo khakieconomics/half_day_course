@@ -1,0 +1,5 @@
+book_filename: "Shortcourse"
+language:
+  ui:
+    chapter_name: "Session "
+output_dir: "docs"
