@@ -220,86 +220,86 @@ p_{jt} \sim \mbox{Normal}_{+}(X_{jt}\gamma + \lambda \xi_{jt}, \sigma_{p})
 <div id="part-2-fake-data-simulation" class="section level2">
 <h2><span class="header-section-number">4.2</span> Part 2: Fake data simulation</h2>
 <p>Astute readers will be aware that we always recommend simulating fake data with known parameters for a model. Here we do precisely that. All fake data simulation is in R. The comments should describe what’s going on here.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## library(ggplot2); library(dplyr)
-## 
-## set.seed(5)
-## # Dimensions of the data.
-## NS &lt;- 500 # 500 fake customers in each market
-## J &lt;- 50 # 50 products
-## T &lt;- 20 # 20 markets
-## P &lt;- 3 # 3 covariates
-## 
-## # structural parameters
-## alpha &lt;- -1.5
-## lambda &lt;- .8
-## beta &lt;- rnorm(P)
-## 
-## # Create a covariance matrix of the individual-level parameters
-## 
-## scales &lt;- seq(from = .5, to = .9, length.out = P+1)
-## 
-## # Generate a random correlation matrix
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ggplot2); <span class="kw">library</span>(dplyr)
+
+<span class="kw">set.seed</span>(<span class="dv">5</span>)
+<span class="co"># Dimensions of the data. </span>
+NS &lt;-<span class="st"> </span><span class="dv">500</span> <span class="co"># 500 fake customers in each market</span>
+J &lt;-<span class="st"> </span><span class="dv">50</span> <span class="co"># 50 products</span>
+T &lt;-<span class="st"> </span><span class="dv">20</span> <span class="co"># 20 markets</span>
+P &lt;-<span class="st"> </span><span class="dv">3</span> <span class="co"># 3 covariates</span>
+
+<span class="co"># structural parameters</span>
+alpha &lt;-<span class="st"> </span>-<span class="fl">1.5</span>
+lambda &lt;-<span class="st"> </span>.<span class="dv">8</span>
+beta &lt;-<span class="st"> </span><span class="kw">rnorm</span>(P)
+
+<span class="co"># Create a covariance matrix of the individual-level parameters</span>
+
+scales &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dt">from =</span> .<span class="dv">5</span>, <span class="dt">to =</span> .<span class="dv">9</span>, <span class="dt">length.out =</span> P<span class="dv">+1</span>)
+
+<span class="co"># Generate a random correlation matrix</span>
 XX &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(<span class="dv">4</span>*<span class="dv">6</span>), <span class="dv">6</span>, <span class="dv">4</span>)
-## Omega &lt;- cor(XX)
-## Sigma &lt;- diag(scales) %*% Omega %*% diag(scales)
-## 
-## 
-## # Product characteristics matrix
-## X &lt;- matrix(rnorm(J*P), J, P)
-## 
-## # Easier to use if we repeat it for each market. We can have different
-## # characteristics (like advertising) in each market
-## X_long &lt;- do.call(rbind, replicate(T, X, simplify = F))
-## 
-## # structural shocks and price
-## xi &lt;- rnorm(T*J, 0, 1)
-## xi_mat &lt;- matrix(xi, T, J, byrow = T)
-## gamma &lt;- rnorm(P)
-## gamma0 &lt;- 3
-## 
-## P2 &lt;- 3 # number of instruments
-## gamma2 &lt;- rnorm(P2)
-## Z &lt;- matrix(rnorm(P2*J*T), J*T, P2)
-## 
-## # The generative model for price
-## price &lt;- truncnorm::rtruncnorm(T*J, a = 0, mean = gamma0 + lambda*xi + X_long %*% gamma, sd = .5)
-## price_mat &lt;- matrix(price, T, J, byrow = T)
-## 
-## # Market size
-## market_size &lt;- rpois(T, 30000)
-## 
-## # Deltas (the fixed part of utility for each product)
-## delta &lt;- alpha*price + X_long %*% beta + xi
-## delta_mat &lt;- matrix(delta[,1], T, J, byrow = T)
-## 
-## # random shocks. (alpha_shocks, beta_shocks) = z_t for generation
-## z &lt;- matrix(rnorm(NS*(P+1)), NS, P+1)
-## 
-## # Empty market shares. Mat is for the observed products; sales is for all goods including the outside good
-## shares_mat &lt;- matrix(NA, T, J)
-## sales &lt;-  matrix(NA, T, J+1)
-## 
-## # Loop through each matrix and generate sales for each product
-## for(i in 1:T) {
-##   
-##   # Latent utility matrix
-##   utility &lt;- matrix(NA, NS, J)
-##   # Create the random component of the (alpha, beta) vector
-##   random_effects &lt;-  z %*% chol(Sigma)
-##   
-##   # monte carlo integration
-##   for(n in 1:NS){
-##     utility[n,] &lt;-t( exp(delta_mat[i,] + cbind(price_mat[i,], X) %*% random_effects[n,]))
-##     utility[n,] &lt;- utility[n,]/(1 + sum(utility[n,]))
-##   }
-##   shares_mat[i,] &lt;- colMeans(utility)
-##   
-##   # Now we&#39;re going to observe the shares with measurement error
-##   # Last column is the outside good
-##   sales[i,] &lt;- rmultinom(1, market_size[i], c(shares_mat[i,], 1 - sum( shares_mat[i,])))
-## }
-## </code></pre></div>
+Omega &lt;-<span class="st"> </span><span class="kw">cor</span>(XX)
+Sigma &lt;-<span class="st"> </span><span class="kw">diag</span>(scales) %*%<span class="st"> </span>Omega %*%<span class="st"> </span><span class="kw">diag</span>(scales)
+
+
+<span class="co"># Product characteristics matrix</span>
+X &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(J*P), J, P)
+
+<span class="co"># Easier to use if we repeat it for each market. We can have different </span>
+<span class="co"># characteristics (like advertising) in each market</span>
+X_long &lt;-<span class="st"> </span><span class="kw">do.call</span>(rbind, <span class="kw">replicate</span>(T, X, <span class="dt">simplify =</span> F))
+
+<span class="co"># structural shocks and price</span>
+xi &lt;-<span class="st"> </span><span class="kw">rnorm</span>(T*J, <span class="dv">0</span>, <span class="dv">1</span>)
+xi_mat &lt;-<span class="st"> </span><span class="kw">matrix</span>(xi, T, J, <span class="dt">byrow =</span> T)
+gamma &lt;-<span class="st"> </span><span class="kw">rnorm</span>(P)
+gamma0 &lt;-<span class="st"> </span><span class="dv">3</span>
+  
+P2 &lt;-<span class="st"> </span><span class="dv">3</span> <span class="co"># number of instruments</span>
+gamma2 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(P2)
+Z &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(P2*J*T), J*T, P2)
+
+<span class="co"># The generative model for price</span>
+price &lt;-<span class="st"> </span>truncnorm::<span class="kw">rtruncnorm</span>(T*J, <span class="dt">a =</span> <span class="dv">0</span>, <span class="dt">mean =</span> gamma0 +<span class="st"> </span>lambda*xi +<span class="st"> </span>X_long %*%<span class="st"> </span>gamma, <span class="dt">sd =</span> .<span class="dv">5</span>) 
+price_mat &lt;-<span class="st"> </span><span class="kw">matrix</span>(price, T, J, <span class="dt">byrow =</span> T)
+
+<span class="co"># Market size</span>
+market_size &lt;-<span class="st"> </span><span class="kw">rpois</span>(T, <span class="dv">30000</span>)
+
+<span class="co"># Deltas (the fixed part of utility for each product)</span>
+delta &lt;-<span class="st"> </span>alpha*price +<span class="st"> </span>X_long %*%<span class="st"> </span>beta +<span class="st"> </span>xi
+delta_mat &lt;-<span class="st"> </span><span class="kw">matrix</span>(delta[,<span class="dv">1</span>], T, J, <span class="dt">byrow =</span> T)
+
+<span class="co"># random shocks. (alpha_shocks, beta_shocks) = z_t for generation</span>
+z &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(NS*(P<span class="dv">+1</span>)), NS, P<span class="dv">+1</span>)
+
+<span class="co"># Empty market shares. Mat is for the observed products; sales is for all goods including the outside good</span>
+shares_mat &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="ot">NA</span>, T, J)
+sales &lt;-<span class="st">  </span><span class="kw">matrix</span>(<span class="ot">NA</span>, T, J<span class="dv">+1</span>)
+
+<span class="co"># Loop through each matrix and generate sales for each product</span>
+for(i in <span class="dv">1</span>:T) {
+  
+  <span class="co"># Latent utility matrix</span>
+  utility &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="ot">NA</span>, NS, J)
+  <span class="co"># Create the random component of the (alpha, beta) vector</span>
+  random_effects &lt;-<span class="st">  </span>z %*%<span class="st"> </span><span class="kw">chol</span>(Sigma)
+  
+  <span class="co"># monte carlo integration</span>
+  for(n in <span class="dv">1</span>:NS){
+    utility[n,] &lt;-<span class="kw">t</span>( <span class="kw">exp</span>(delta_mat[i,] +<span class="st"> </span><span class="kw">cbind</span>(price_mat[i,], X) %*%<span class="st"> </span>random_effects[n,]))
+    utility[n,] &lt;-<span class="st"> </span>utility[n,]/(<span class="dv">1</span> +<span class="st"> </span><span class="kw">sum</span>(utility[n,]))
+  }
+  shares_mat[i,] &lt;-<span class="st"> </span><span class="kw">colMeans</span>(utility)
+  
+  <span class="co"># Now we&#39;re going to observe the shares with measurement error</span>
+  <span class="co"># Last column is the outside good</span>
+  sales[i,] &lt;-<span class="st"> </span><span class="kw">rmultinom</span>(<span class="dv">1</span>, market_size[i], <span class="kw">c</span>(shares_mat[i,], <span class="dv">1</span> -<span class="st"> </span><span class="kw">sum</span>( shares_mat[i,])))
+}</code></pre></div>
 <p>It should be pointed out that here <span class="math inline">\(\xi_{jt}\)</span> and <span class="math inline">\(p\)</span> are correlated. This should introduce endogeneity problems in the model.</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
 </div>
 <div id="part-3-writing-out-the-model-in-stan" class="section level2">
 <h2><span class="header-section-number">4.3</span> Part 3: Writing out the model in Stan</h2>
@@ -409,45 +409,45 @@ model {
   }
 }
 </code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## 
-## # run model ---------------------------------------------------------------
-## 
-## # Compile Stan function to check that it generates sensible shares
-## 
-## library(rstan)
-## options(mc.cores = parallel::detectCores())
-## 
-## data_list &lt;- list(NS = nrow(z), 
-##                   J = J, 
-##                   T = T, 
-##                   P = P, 
-##                   z = z, 
-##                   price = price_mat, 
-##                   sales = sales,
-##                   X_repeat = X_long,
-##                   nu = 3)
-## 
-## # Compile the model
-## compiled_model &lt;- stan_model(&quot;vsb.stan&quot;)
-## 
-## # For the sake of time, we estimate this using optimization
-## test_optim &lt;- optimizing(compiled_model, data = data_list)
-## </code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># run model ---------------------------------------------------------------</span>
+
+<span class="co"># Compile Stan function to check that it generates sensible shares</span>
+
+<span class="kw">library</span>(rstan)
+<span class="kw">options</span>(<span class="dt">mc.cores =</span> parallel::<span class="kw">detectCores</span>())
+
+data_list &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">NS =</span> <span class="kw">nrow</span>(z), 
+                  <span class="dt">J =</span> J, 
+                  <span class="dt">T =</span> T, 
+                  <span class="dt">P =</span> P, 
+                  <span class="dt">z =</span> z, 
+                  <span class="dt">price =</span> price_mat, 
+                  <span class="dt">sales =</span> sales,
+                  <span class="dt">X_repeat =</span> X_long,
+                  <span class="dt">nu =</span> <span class="dv">3</span>)
+
+<span class="co"># Compile the model</span>
+compiled_model &lt;-<span class="st"> </span><span class="kw">stan_model</span>(<span class="st">&quot;vsb.stan&quot;</span>)
+
+<span class="co"># For the sake of time, we estimate this using optimization</span>
+test_optim &lt;-<span class="st"> </span><span class="kw">optimizing</span>(compiled_model, <span class="dt">data =</span> data_list)</code></pre></div>
 <p>Now how did the model go at recapturing known demand shocks?</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p>And how about the structural parameters?</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Omegas &lt;- test_optim$par[grepl(&quot;Omega&quot;, names(test_optim$par))]
-## Scales &lt;- test_optim$par[grepl(&quot;^scale&quot;, names(test_optim$par))]
-## pars &lt;- c(test_optim$par[1:(P+1)], Omegas, Scales)
-## true_values &lt;- c(alpha, beta, as.vector(Omega), scales)
-## 
-## data_frame(Estimates = pars, 
-##            `True values` = true_values,
-##            Parameter = c(&quot;alpha&quot;, rep(&quot;beta&quot;, P), rep(&quot;Omega&quot;, (P+1)^2), rep(&quot;scale&quot;, P+1) )) %&gt;% 
-##   ggplot(aes(x = `True values`, y = Estimates)) + 
-##   geom_point(aes(colour = Parameter)) + 
-##   geom_abline(aes(intercept = 0, slope = 1)) +
-##   theme_economist() +
-##   labs(title = &quot;Estimates and true values\nof structural parameters&quot;)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Omegas &lt;-<span class="st"> </span>test_optim$par[<span class="kw">grepl</span>(<span class="st">&quot;Omega&quot;</span>, <span class="kw">names</span>(test_optim$par))]
+Scales &lt;-<span class="st"> </span>test_optim$par[<span class="kw">grepl</span>(<span class="st">&quot;^scale&quot;</span>, <span class="kw">names</span>(test_optim$par))]
+pars &lt;-<span class="st"> </span><span class="kw">c</span>(test_optim$par[<span class="dv">1</span>:(P<span class="dv">+1</span>)], Omegas, Scales)
+true_values &lt;-<span class="st"> </span><span class="kw">c</span>(alpha, beta, <span class="kw">as.vector</span>(Omega), scales)
+
+<span class="kw">data_frame</span>(<span class="dt">Estimates =</span> pars, 
+           <span class="st">`</span><span class="dt">True values</span><span class="st">`</span> =<span class="st"> </span>true_values,
+           <span class="dt">Parameter =</span> <span class="kw">c</span>(<span class="st">&quot;alpha&quot;</span>, <span class="kw">rep</span>(<span class="st">&quot;beta&quot;</span>, P), <span class="kw">rep</span>(<span class="st">&quot;Omega&quot;</span>, (P<span class="dv">+1</span>)^<span class="dv">2</span>), <span class="kw">rep</span>(<span class="st">&quot;scale&quot;</span>, P<span class="dv">+1</span>) )) %&gt;%<span class="st"> </span>
+<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> <span class="st">`</span><span class="dt">True values</span><span class="st">`</span>, <span class="dt">y =</span> Estimates)) +<span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">colour =</span> Parameter)) +<span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_abline</span>(<span class="kw">aes</span>(<span class="dt">intercept =</span> <span class="dv">0</span>, <span class="dt">slope =</span> <span class="dv">1</span>)) +
+<span class="st">  </span><span class="kw">theme_economist</span>() +
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Estimates and true values</span><span class="ch">\n</span><span class="st">of structural parameters&quot;</span>)</code></pre></div>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
 <p><strong><em>Voila!</em></strong>.</p>
 </div>
 <div id="conclusion" class="section level2">

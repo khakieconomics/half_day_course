@@ -174,6 +174,57 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>Bayesian analysis of the experiment can help when there is more information available about the the treatment effect than exists the observations from our experiment, as would be the case of there having been previous studies of the same treatment effect. These previous studies’ results can be incorporated into our study using what is known as a <em>hierarchical prior</em>, resulting in more precise estimates of the treatment effect.</p>
 <p>For example, imagine you are an education researcher evaluating the impact of a trendy new educational teaching method on test scores. You run a randomized experiment on seventy students at one school and learn that the intervention improved test scores by 34 points on a scale from to 800. Because of the fairly small sample size, this estimate has a standard error of 23.5, and is not “statistically significant” with a p-value of 0.15 (greater than the arbitrary 0.05 threshold used for declaring statistical significance in many fields). This is consistent with a 95% confidence interval of the estimate of (-12.8 to 80.9). If you were to roll out the intervention on a large cohort of students, what would you expect the treatment effect to be? 0—our estimate is not statistically significant? 34? Some other number?</p>
 <p>Now suppose that because this educational intervention is trendy, it is being experimented on by other researchers. You find that these researchers have achieved the following estimates of the treatment effect from the same treatment (this is Rubin’s famous 8 Schools data <span class="citation">(Rubin <a href="#ref-rubin8schools">1981</a>)</span>):</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">School</th>
+<th align="right">Treatment effect</th>
+<th align="right">Standard error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">A</td>
+<td align="right">28.39</td>
+<td align="right">14.9</td>
+</tr>
+<tr class="even">
+<td align="left">B</td>
+<td align="right">7.94</td>
+<td align="right">10.2</td>
+</tr>
+<tr class="odd">
+<td align="left">C</td>
+<td align="right">-2.75</td>
+<td align="right">16.3</td>
+</tr>
+<tr class="even">
+<td align="left">D</td>
+<td align="right">6.82</td>
+<td align="right">11.0</td>
+</tr>
+<tr class="odd">
+<td align="left">E</td>
+<td align="right">-0.64</td>
+<td align="right">9.4</td>
+</tr>
+<tr class="even">
+<td align="left">F</td>
+<td align="right">0.63</td>
+<td align="right">11.4</td>
+</tr>
+<tr class="odd">
+<td align="left">G</td>
+<td align="right">18.01</td>
+<td align="right">10.4</td>
+</tr>
+<tr class="even">
+<td align="left">H</td>
+<td align="right">12.16</td>
+<td align="right">17.6</td>
+</tr>
+</tbody>
+</table>
 <p>After seeing these other study results of the same intervention, how might your expectations of a roll-out of the intervention change? It turns out that we can use these study results in re-analyzing our own data in order to get a more precise estimate of the treatment effect in our own study. Doing so reduces the 95% “credibility interval”.</p>
 </div>
 <div id="benefit-2-combining-sources-of-information" class="section level3 unnumbered">
@@ -193,7 +244,79 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h3>Benefit 4: Regularizing richly parameterized models</h3>
 <p>Many important predictive/control variables have high dimensionsionality. For example, imagine you are building a model to predict whether the a package deliverd from town A to B will be delivered late. An important predictive variable will be the origin and destination towns. In most countries, there are a very large number of post-codes, whose values have no intrinsic meaning (so we cannot use these as a numerical control variable). How can we use these values to generate better predictions? And how should we learn from towns with very few observations vis-à-vis towns with many?</p>
 <p>How do we deal with this problem without using Bayesian methods? One popular technique is to “one-hot” encode the categorical predictors, so that our data go from</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">zip_code</th>
+<th align="left">other_data</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">11111</td>
+<td align="left">…</td>
+</tr>
+<tr class="even">
+<td align="left">11112</td>
+<td align="left">…</td>
+</tr>
+<tr class="odd">
+<td align="left">11113</td>
+<td align="left">…</td>
+</tr>
+<tr class="even">
+<td align="left">11114</td>
+<td align="left">…</td>
+</tr>
+<tr class="odd">
+<td align="left">…</td>
+<td align="left">…</td>
+</tr>
+</tbody>
+</table>
 <p>to</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">zip_code 11111</th>
+<th align="left">zip_code 11112</th>
+<th align="left">zip_code 11113</th>
+<th align="left">zip_code 11114</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td align="left">0</td>
+<td align="left">1</td>
+<td align="left">0</td>
+<td align="left">0</td>
+</tr>
+<tr class="odd">
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">1</td>
+<td align="left">0</td>
+</tr>
+<tr class="even">
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">0</td>
+<td align="left">1</td>
+</tr>
+<tr class="odd">
+<td align="left">…</td>
+<td align="left">…</td>
+<td align="left">…</td>
+<td align="left">…</td>
+</tr>
+</tbody>
+</table>
 <p>And then continue apace. The problem with such an approach is that our parameter space becomes extremely large, and we might end up doing “noise-mining”—discovering relationships where there are none, simply through bad luck. A trick known as “regularization” can help prevent this, and is considered good practice when you have a model with many variables. It does so by “penalizing” parameter estimates that are not estimated precisely—for instance, those zip codes with very few observations—“shrinking” the parameter estimates towards zero (or some other value). Regularization like this is widely used in machine learning. A difficulty is that most canned routines that implement regularization do not allow for easy incorporation of uncertainty in the parameter estimates.</p>
 <p>Bayesian methods also employ regularization, through the use of priors. This is because our parameter estimates will always be between the likelihood estimate (typically, the estimates you’ll get from a non-Bayesian approach) and our priors. Strictly, priors should encode the information that we have about parameter estimates before we estimate a model. One valuable type of prior information that we have is “regularization works!” or “mean reversion happens!” These partly motivate the approaches we advocate for modeling hierarchical and panel data, especially the use of hierarchical priors.</p>
 </div>
@@ -225,6 +348,57 @@ y_{i}  \sim \mbox{Cauchy}(X_{i}\beta ,\, \sigma)
 \]</span></p>
 <p>In any case, the above are <em>models</em>. The models themselves have <em>fixed</em> unknown parameters and, possibly, <em>fixed</em> latent variables, about which we want to conduct probabilistic inference. That is, we want to be able to make probabilistic statements about the true (out of sample) values of the the fixed values of unknown parameters and latent variables.</p>
 <p>It is common to use different techniques to do this, with the technique depending on the model. For example,</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Model</th>
+<th align="left">Estimation technique</th>
+<th align="left">Inference method</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Normal linear model</td>
+<td align="left">OLS Maximum likelihood IV/GMM</td>
+<td align="left">Appeal to sampling theory/pray</td>
+</tr>
+<tr class="even">
+<td align="left">Generalized linear model</td>
+<td align="left">Maximum likelihood/GMM</td>
+<td align="left">Bootstrap</td>
+</tr>
+<tr class="odd">
+<td align="left">Hierarchical linear model</td>
+<td align="left">Expectation maximization (EM)/MCMC</td>
+<td align="left">Approximation to Bayesian/ Genuine Bayes</td>
+</tr>
+<tr class="even">
+<td align="left">Mixed logit</td>
+<td align="left">Simulated likelihood</td>
+<td align="left">Bootstrap</td>
+</tr>
+<tr class="odd">
+<td align="left">Aggregate mixed logit</td>
+<td align="left">BLP/GMM</td>
+<td align="left">Bootstrap while reading War and Peace</td>
+</tr>
+<tr class="even">
+<td align="left">State-space models</td>
+<td align="left">Kalman filter/particle filters/sequential Bayes</td>
+<td align="left">Built into method</td>
+</tr>
+<tr class="odd">
+<td align="left">Neural network</td>
+<td align="left">Gradient descent with backpropagation/Variational Bayes</td>
+<td align="left">Only care about predictions</td>
+</tr>
+<tr class="even">
+<td align="left">Gaussian process</td>
+<td align="left">Maximum likelihood/variational Bayes/MCMC</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
 <p>This distinction between models and estimation procedures probably feels quite comfortable for economists. In other fields, particularly nonparametric machine learning, there is no generative model, and the estimation procedure and “model” are one and the same.</p>
 <p>The point of Stan is to allow us to express a wide range of probability models, such as those above. Once we have expressed the generative model and collected our data, we can use a variety of techniques to estimate the parameters of these models. In principle we can fit models that do not make use of prior information, which corresponds to the maximum likelihood estimate. But normally we’ll find it more useful to use prior information, in which case we’ll be estimating models using <em>Bayesian techniques</em>.</p>
 <p>Stan implements three cutting-edge estimation methods:</p>
@@ -272,7 +446,9 @@ y_{i} \sim \mbox{N}(\alpha + \beta x_{i}, \sigma)
 y_{i} \sim \mbox{N}(\alpha + \beta x_{i}, \sigma)
 \]</span></p>
 <p>which might look like this:</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-7-1.png" width="576" /></p>
 <p>Now we ask: what was the density at the <em>actual</em> outcome <span class="math inline">\(y_{i}\)</span>?</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-8-1.png" width="576" /></p>
 <p>The value of the density at an observed outcome is the <em>likelihood contribution</em> <span class="math inline">\(f(y_{i} | x_{i}, a, b, s)\)</span> of a single datapoint. If we assume (conditional) independence of the draws, the sample likelihood of all data is the <em>product</em> of all the individual out of sample likelihoods <span class="math inline">\(\prod_{i = 1}^{N}f(y_{i} | x_{i}, a, b, s)\)</span>.</p>
 <p>You can probably see the problem here—for reasonably large spreads of the data, the value of the predictive density for a datapoint is typically less than 1, and the product of many such datapoints will be an extremely small number. This might give us numerical issues. One way around this is to take the log of the likelihood—the Log Likelihood. Because the log of numbers in (0, 1) are negative numbers large in absolute value, the sum of these numbers will also have a large absolute value, so we’ll not get numerical issues in computation.</p>
 <p><span class="math display">\[
@@ -323,8 +499,46 @@ y_{i} \sim \mbox{N}(\alpha + \beta x_{i}, \sigma)
 <li>To obtain many independent draws from the posterior, and evaluate quantiles, expected values of those draws. This is the approach in MCMC and ABC.</li>
 </ol>
 <p>In theory, our posterior <span class="math inline">\(p(\theta | y)\)</span> is an abstract distribution; in practice (when using MCMC), it’s a matrix of data, where each column corresponds to a parameter, and each row a draw from <span class="math inline">\(p(\theta | y)\)</span>. For instance, the first five rows of our posterior matrix for our linear model above might look like:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right">a</th>
+<th align="right">b</th>
+<th align="right">sigma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1.81</td>
+<td align="right">0.55</td>
+<td align="right">0.95</td>
+</tr>
+<tr class="even">
+<td align="right">2.02</td>
+<td align="right">0.51</td>
+<td align="right">0.85</td>
+</tr>
+<tr class="odd">
+<td align="right">1.86</td>
+<td align="right">0.57</td>
+<td align="right">0.97</td>
+</tr>
+<tr class="even">
+<td align="right">2.01</td>
+<td align="right">0.51</td>
+<td align="right">1.03</td>
+</tr>
+<tr class="odd">
+<td align="right">2.04</td>
+<td align="right">0.68</td>
+<td align="right">1.05</td>
+</tr>
+</tbody>
+</table>
 <p>Each of these parameter combinations implies a different predictive distribution. Consequently, they also imply different predictive likelihoods for our out of sample datapoint <span class="math inline">\(y_{j} = 1,x_{j} = 1\)</span>. This is illustrated for 30 posterior replicates below.</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-10-1.png" width="576" /></p>
 <p>The density of the data across posterior draws is known as the <em>log posterior density</em> of a datapoint. Unlike the likelihood, we are uncertain of its value and need to perform inference. To illustrate this, let’s look at a histogram of the log posterior density in the above example (but with 500 replicates, not 30):</p>
+<p><img src="Shortcourse_files/figure-html/unnamed-chunk-11-1.png" width="576" /></p>
 <p>Note that the log posterior density can be evaluated <em>for each datapoint</em>; if we have many datapoints for which we want to evaluate the LPD we simply need to evaluate it for each, and sum across all datapoints.</p>
 </div>
 </div>

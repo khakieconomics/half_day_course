@@ -142,11 +142,28 @@ In this case, we don't know how many lags to include. One approach is to use the
 a prior that shrinks coefficients on uninformative parameters very strongly towards zero, without having a large effect on the 
 remaining coefficients. This is similar in spirit to LASSO or Ridge Regression. 
 
+The horseshoe prior is: 
+
+$$
+\beta_{i} \sim \mbox{Normal}(0, \tau \lambda_{i})
+$$
+with 
+
+$$
+\lambda_{i} \sim \mbox{Cauchy}_{+}(0, 1)
+$$
+And $\tau$ either provided by the modeler, or estimated. $\tau$ is the global shrinkage coefficient, 
+and $\lambda_{i}$ will take large values when $\beta_{i}$ is non-zero, and small values otherwise. 
 
 
 ### Step 2: Simulating the model with known parameters
 
-We have now specified two probability models. What we will do next is simulate some data from the second (more complex model), and then check to see if we can recover the (known) model parameters by estimating both the correctly specified and incorrectly specified models above. Simulating and recovering known parameters is an important checking procedure in model building; it often helps catch errors in the model and clarifies the model in the mind of the modeler. 
+An extremely important step in the workflow is to simulate the model with 
+known values for the unknowns. This mightn't seem very useful when you're working with 
+simple models, but as your models become more complex, it's an extremely step. 
+
+There are two broad approaches to simulating your model with known parameters. The first is to 
+hard-code the parameter values
 
 Now that we have written out the data generating model, let's generate some known parameters and covariates and simulate the model. First: generate some values for the data and paramaters.
 
