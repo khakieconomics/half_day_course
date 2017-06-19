@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>A brief introduction to econometrics in Stan</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta name="description" content="This course provides an introduction to Bayesian modeling, and examples of the common techniques used in many fields of econometrics.">
+  <meta name="generator" content="bookdown 0.3.5 and GitBook 2.6.7">
+
+  <meta property="og:title" content="A brief introduction to econometrics in Stan" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="This course provides an introduction to Bayesian modeling, and examples of the common techniques used in many fields of econometrics." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="A brief introduction to econometrics in Stan" />
+  
+  <meta name="twitter:description" content="This course provides an introduction to Bayesian modeling, and examples of the common techniques used in many fields of econometrics." />
+  
+
+<meta name="author" content="James Savage">
+
+
+<meta name="date" content="2017-06-19">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+<link rel="prev" href="vsb.html">
+
+
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>About</a></li>
+<li class="chapter" data-level="1" data-path="intro.html"><a href="intro.html"><i class="fa fa-check"></i><b>1</b> An introduction to Stan</a><ul>
+<li class="chapter" data-level="1.1" data-path="intro.html"><a href="intro.html#why-might-you-want-to-start-learning-bayesian-methods"><i class="fa fa-check"></i><b>1.1</b> Why might you want to start learning Bayesian methods?</a><ul>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-1-incorporating-knowledge-from-outside-the-data"><i class="fa fa-check"></i>Benefit 1: Incorporating knowledge from outside the data</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-2-combining-sources-of-information"><i class="fa fa-check"></i>Benefit 2: Combining sources of information</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-3-dealing-with-uncertainty-consistently-in-model-predictions"><i class="fa fa-check"></i>Benefit 3: Dealing with uncertainty consistently in model predictions</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-4-regularizing-richly-parameterized-models"><i class="fa fa-check"></i>Benefit 4: Regularizing richly parameterized models</a></li>
+<li class="chapter" data-level="" data-path="intro.html"><a href="intro.html#benefit-5-doing-away-with-tests"><i class="fa fa-check"></i>Benefit 5: Doing away with tests</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="intro.html"><a href="intro.html#models-and-inference"><i class="fa fa-check"></i><b>1.2</b> Models and inference</a></li>
+<li class="chapter" data-level="1.3" data-path="intro.html"><a href="intro.html#why-use-stan"><i class="fa fa-check"></i><b>1.3</b> Why use Stan?</a></li>
+<li class="chapter" data-level="1.4" data-path="intro.html"><a href="intro.html#background-bayes-rule-likelihood-and-priors"><i class="fa fa-check"></i><b>1.4</b> Background: Bayes rule, likelihood and priors</a><ul>
+<li class="chapter" data-level="1.4.1" data-path="intro.html"><a href="intro.html#likelihoodlog-likelihood"><i class="fa fa-check"></i><b>1.4.1</b> Likelihood/log likelihood</a></li>
+<li class="chapter" data-level="1.4.2" data-path="intro.html"><a href="intro.html#so-what-does-the-likelhood-mean"><i class="fa fa-check"></i><b>1.4.2</b> So what does the likelhood mean?</a></li>
+<li class="chapter" data-level="1.4.3" data-path="intro.html"><a href="intro.html#prior-distributions"><i class="fa fa-check"></i><b>1.4.3</b> Prior distributions</a></li>
+<li class="chapter" data-level="1.4.4" data-path="intro.html"><a href="intro.html#bayes-rule"><i class="fa fa-check"></i><b>1.4.4</b> Bayes rule</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="intro.html"><a href="intro.html#hmc-and-betancourt"><i class="fa fa-check"></i><b>1.5</b> HMC and Betancourt</a></li>
+<li class="chapter" data-level="1.6" data-path="intro.html"><a href="intro.html#a-tour-of-a-stan-program"><i class="fa fa-check"></i><b>1.6</b> A tour of a Stan program</a><ul>
+<li class="chapter" data-level="1.6.1" data-path="intro.html"><a href="intro.html#a-hello-world-example"><i class="fa fa-check"></i><b>1.6.1</b> A hello world example</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="msw.html"><a href="msw.html"><i class="fa fa-check"></i><b>2</b> Modern Statistical Workflow</a><ul>
+<li class="chapter" data-level="2.1" data-path="msw.html"><a href="msw.html#modern-statistical-workflow"><i class="fa fa-check"></i><b>2.1</b> Modern Statistical Workflow</a><ul>
+<li class="chapter" data-level="2.1.1" data-path="msw.html"><a href="msw.html#example-a-simple-time-series-model-of-loan-repayments"><i class="fa fa-check"></i><b>2.1.1</b> Example: A simple time-series model of loan repayments</a></li>
+<li class="chapter" data-level="2.1.2" data-path="msw.html"><a href="msw.html#step-1-writing-out-the-probability-model"><i class="fa fa-check"></i><b>2.1.2</b> Step 1: Writing out the probability model</a></li>
+<li class="chapter" data-level="2.1.3" data-path="msw.html"><a href="msw.html#step-2-simulating-the-model-with-known-parameters"><i class="fa fa-check"></i><b>2.1.3</b> Step 2: Simulating the model with known parameters</a></li>
+<li class="chapter" data-level="2.1.4" data-path="msw.html"><a href="msw.html#model-inspection"><i class="fa fa-check"></i><b>2.1.4</b> Model inspection</a></li>
+<li class="chapter" data-level="2.1.5" data-path="msw.html"><a href="msw.html#model-comparison"><i class="fa fa-check"></i><b>2.1.5</b> Model comparison</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="msw.html"><a href="msw.html#tools-of-the-trade-borrowing-from-software-engineering"><i class="fa fa-check"></i><b>2.2</b> Tools of the trade: borrowing from software engineering</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="vsb.html"><a href="vsb.html"><i class="fa fa-check"></i><b>3</b> A more difficult model</a></li>
+<li class="chapter" data-level="4" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><i class="fa fa-check"></i><b>4</b> Aggregate random coefficients logit: Bayesian estimation using Stan</a><ul>
+<li class="chapter" data-level="4.1" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html#a-generative-model-of-consumer-choice"><i class="fa fa-check"></i><b>4.1</b> A generative model of consumer choice</a><ul>
+<li class="chapter" data-level="4.1.1" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html#generating-aggregate-sales-data-from-the-model"><i class="fa fa-check"></i><b>4.1.1</b> Generating aggregate sales data from the model</a></li>
+<li class="chapter" data-level="4.1.2" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html#modeling-price"><i class="fa fa-check"></i><b>4.1.2</b> Modeling price</a></li>
+<li class="chapter" data-level="4.1.3" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html#estimating-the-model-from-aggregate-market-level-data"><i class="fa fa-check"></i><b>4.1.3</b> Estimating the model from aggregate market-level data</a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html#part-2-fake-data-simulation"><i class="fa fa-check"></i><b>4.2</b> Part 2: Fake data simulation</a></li>
+<li class="chapter" data-level="4.3" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html#part-3-writing-out-the-model-in-stan"><i class="fa fa-check"></i><b>4.3</b> Part 3: Writing out the model in Stan</a></li>
+<li class="chapter" data-level="4.4" data-path="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html"><a href="aggregate-random-coefficients-logit-bayesian-estimation-using-stan.html#conclusion"><i class="fa fa-check"></i><b>4.4</b> Conclusion</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">A brief introduction to econometrics in Stan</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="aggregate-random-coefficients-logit-bayesian-estimation-using-stan" class="section level1">
+<h1><span class="header-section-number">Session 4</span> Aggregate random coefficients logit: Bayesian estimation using Stan</h1>
+<p>This session illustrates how to fit aggregate random coefficient logit models in Stan, using generative/Bayesian techniques. It’s far easier to learn and implement than the BLP algorithm, and has the benefits of being robust to mismeasurement of market shares, and giving limited-sample posterior uncertainty of all parameters (and demand shocks). This comes at the cost of an additional assumption: we employ a parametric model of how unobserved product-market demand shocks affect prices, thereby explicitly modeling the endogeneity between prices and observed consumer choices, whose biasing effect on estimates, classical BLP uses instrumental variables to resolve. Specifying the full generative model, therefore, instrumental variables are not strictly needed (though they can certainly still be incorporated).</p>
+<div id="a-generative-model-of-consumer-choice" class="section level2">
+<h2><span class="header-section-number">4.1</span> A generative model of consumer choice</h2>
+<p>We base our estimation in the standard aggregate <em>random coefficients logit</em> model used in BLP. In this model, customer <span class="math inline">\(i\)</span> in market <span class="math inline">\(t\)</span> has preferences over product <span class="math inline">\(j\)</span> such that their total utility is</p>
+<p><span class="math display">\[
+V_{ijt} = u_{ijt} + \epsilon_{ijt} \mbox{ where } \epsilon_{ij t} \sim \mbox{Gumbel}(.) 
+\]</span></p>
+<p><span class="math display">\[
+u_{ijt} = \alpha_{i}p_{jt} + X_{jt}\beta_{i} + \xi_{jt} 
+\]</span></p>
+<p>This says that each consumer receives utility, <span class="math inline">\(u_{ijt}\)</span>, from good <span class="math inline">\(j\)</span> according to its price, <span class="math inline">\(p_{jt}\)</span>, its characteristics, <span class="math inline">\(X_{jt}\)</span>, some systematic “demand” or “quality” shock applicable to all customers in market <span class="math inline">\(t\)</span>, <span class="math inline">\(\xi_{jt}\)</span>, and some iid Gumbel shock, <span class="math inline">\(\epsilon_{ijt}\)</span>. Note that the coefficients <span class="math inline">\(\alpha_{i}\)</span> and <span class="math inline">\(\beta_{i}\)</span> are individual specific (and so are individual random effects).</p>
+<p>Under the above assumptions, the probability that an individual will purchase good <span class="math inline">\(j\)</span> (as in Train (2003)) is given by:</p>
+<p><span class="math display">\[
+p(u_{ijt}=\max(u_{it})) = \frac{\exp(\alpha_{i}p_{jt} + X_{jt}\beta_{i} + \xi_{jt})}{1 + \sum_{j}\exp(\alpha_{i}p_{jt} + X_{jt}\beta_{i} + \xi_{jt})}
+\]</span></p>
+<p>Where the denominator includes the expected value of the utility of the outside good <span class="math inline">\(1 = \exp(\mbox{E}[u_{0}])\)</span>.</p>
+<div id="generating-aggregate-sales-data-from-the-model" class="section level3">
+<h3><span class="header-section-number">4.1.1</span> Generating aggregate sales data from the model</h3>
+<p>To close the model, we need to connect the probability of an individual’s purchasing choice with each good’s market share. Classical BLP uses GMM to match empirical market shares observed in the data to the average probabilities of each good’s being purchased (integrated with respect to the random coefficient distribution).</p>
+<p>This approach induces measurement error when markets vary in size, however. A market share computed from 100,000 sales across 5 goods is different in distribution from a market share computed from 1,000 or 100 sales. To account for this, we make the assumption that true market shares <span class="math inline">\(s_{jt}\)</span> map to observed sales (which are observed with error) through a multinomial distribution with a given market size.</p>
+<p><span class="math display">\[
+y_{jt} \sim \mbox{Multinomial}(s_{jt}, \mbox{Market size}_{t})
+\]</span></p>
+</div>
+<div id="modeling-price" class="section level3">
+<h3><span class="header-section-number">4.1.2</span> Modeling price</h3>
+<p>A second major difference between our model and other approaches is to model the demand shock <span class="math inline">\(\xi_{jt}\)</span> as an explicit random variable, about which we want to perform inference. The approach we take is to model it as a latent factor, whose value is revealed partly in utilities (and market shares), and partly in prices or any other endogenous product characteristics.</p>
+<p>Petrin and Train (2010) propose a similar control function approach and show how it can substitute for IVs, but it seems not to have caught on in the literature. In the Bayesian framework, however, it seems to make particularly good sense.</p>
+<p>To do this in a parametric way, we make the assumption that prices come from a truncated normal distribution, which gives positive weight to non-negative prices. If we suspect the relationship between <span class="math inline">\(X\)</span>, <span class="math inline">\(\xi\)</span> and prices to not be linear, we could use more flexible semi-parametric or non-parametric models. Or we could propose a structural model for the expected value of price, with pricing errors having a parametric distribution.</p>
+<p><span class="math display">\[
+p_{jt} \sim \mbox{Normal}_{+}(X_{jt}\gamma + \lambda \xi_{jt}, \sigma_{p})
+\]</span></p>
+<p>Here, <span class="math inline">\(\lambda\)</span> is a factor loading on <span class="math inline">\(\xi_{jt}\)</span>. We’ve used a truncated distribution because it places no weight on negative prices. Using this specification, <span class="math inline">\(\xi_{jt}\)</span> will be correlated with <span class="math inline">\(p_{jt}\)</span> in the utility model.</p>
+<p>Note that if we have instruments for price, they could easily be included in this model, but they are not strictly necessary as the (linear) endogeneity of prices on the demand shock is accounted for in the model.</p>
+</div>
+<div id="estimating-the-model-from-aggregate-market-level-data" class="section level3">
+<h3><span class="header-section-number">4.1.3</span> Estimating the model from aggregate market-level data</h3>
+<p>At a high level, the trick to estimating this model is to estimate the the distribution of the individual-level coefficients, rather than the actual individual-level coefficients (which we obviously cannot estimate from aggregate data). We do this by reformulating the utility model in terms of fixed and random utility, and passing in the individual random effects <span class="math inline">\(z_{i}\)</span> as data.</p>
+<p>First, express utility in terms of a fixed and random portion:</p>
+<p><span class="math display">\[
+\mbox{E}[u_{ijt}] = \alpha p_{jt} + X_{jt}\beta + (p_{jt},\, X_{jt}&#39;)\, L\, z_{i}&#39; + \xi_{jt} 
+\]</span></p>
+<p><span class="math inline">\(z_{i}\)</span> is a row vector of <span class="math inline">\(P+1\)</span> independent draws from some distribution, normally a unit normal, and <span class="math inline">\(L\)</span> is the lower triangular Cholesky factorization of <span class="math inline">\(\Sigma\)</span>, which is a <span class="math inline">\(P+1 \times P+1\)</span> covariance matrix. To be clear, <span class="math inline">\(\Sigma\)</span> is the covariance matrix of variations in <span class="math inline">\((\alpha_{i},\, \beta_{i}&#39;)\)</span> across customers. If the element of <span class="math inline">\(\Sigma\)</span> corresponding to price and product characteristic 3 is negative, it means that customers who are more less sensitive to price (assuming all are negative, those whose <span class="math inline">\(\alpha_{i}\)</span>s are closer to 0) tend to derive less utility from characteristic 3. Good estimates of <span class="math inline">\(\Sigma\)</span> are what give us good estimates of the distribution of preferences, which is what we ultimately want.</p>
+<p>Note that if we have information about how markets differ from one another (for instance their demographics), we could include that information in the random effects part of the model.</p>
+<p>Given this structure, we can estimate the structural parameters (and demand shocks) using the following method:</p>
+<ol style="list-style-type: decimal">
+<li>Draw a <span class="math inline">\(NS \times P+1\)</span> matrix independent shocks <span class="math inline">\(z_{t}\)</span>, for some large number <span class="math inline">\(NS\)</span>. We normally use the same shocks for every market.</li>
+<li>For a given draw of the structural parameters <span class="math inline">\(\alpha,\, \beta,\, \xi_{jt}, \Sigma\)</span>, for each market for each <span class="math inline">\(i\in 1:NS\)</span> calculate <span class="math inline">\(\mbox{E}[u_{ijt}]\)</span> and hence <span class="math inline">\(p(u_{ijt}=\max(u_{it}))\)</span>.</li>
+<li>Aggregate individual probabilities into predicted market shares <span class="math inline">\(s_{jt,\mathrm{pred}}\)</span></li>
+<li>Model <span class="math inline">\(y_{t}\)</span> and <span class="math inline">\(p_{t}\)</span> as described above.</li>
+</ol>
+<p>Steps 2 and 3 occur in every iteration (or, if you are using HMC, every leapfrog step) of your model estimation.</p>
+</div>
+</div>
+<div id="part-2-fake-data-simulation" class="section level2">
+<h2><span class="header-section-number">4.2</span> Part 2: Fake data simulation</h2>
+<p>Astute readers will be aware that we always recommend simulating fake data with known parameters for a model. Here we do precisely that. All fake data simulation is in R. The comments should describe what’s going on here.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## library(ggplot2); library(dplyr)
+## 
+## set.seed(5)
+## # Dimensions of the data.
+## NS &lt;- 500 # 500 fake customers in each market
+## J &lt;- 50 # 50 products
+## T &lt;- 20 # 20 markets
+## P &lt;- 3 # 3 covariates
+## 
+## # structural parameters
+## alpha &lt;- -1.5
+## lambda &lt;- .8
+## beta &lt;- rnorm(P)
+## 
+## # Create a covariance matrix of the individual-level parameters
+## 
+## scales &lt;- seq(from = .5, to = .9, length.out = P+1)
+## 
+## # Generate a random correlation matrix
+XX &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="kw">rnorm</span>(<span class="dv">4</span>*<span class="dv">6</span>), <span class="dv">6</span>, <span class="dv">4</span>)
+## Omega &lt;- cor(XX)
+## Sigma &lt;- diag(scales) %*% Omega %*% diag(scales)
+## 
+## 
+## # Product characteristics matrix
+## X &lt;- matrix(rnorm(J*P), J, P)
+## 
+## # Easier to use if we repeat it for each market. We can have different
+## # characteristics (like advertising) in each market
+## X_long &lt;- do.call(rbind, replicate(T, X, simplify = F))
+## 
+## # structural shocks and price
+## xi &lt;- rnorm(T*J, 0, 1)
+## xi_mat &lt;- matrix(xi, T, J, byrow = T)
+## gamma &lt;- rnorm(P)
+## gamma0 &lt;- 3
+## 
+## P2 &lt;- 3 # number of instruments
+## gamma2 &lt;- rnorm(P2)
+## Z &lt;- matrix(rnorm(P2*J*T), J*T, P2)
+## 
+## # The generative model for price
+## price &lt;- truncnorm::rtruncnorm(T*J, a = 0, mean = gamma0 + lambda*xi + X_long %*% gamma, sd = .5)
+## price_mat &lt;- matrix(price, T, J, byrow = T)
+## 
+## # Market size
+## market_size &lt;- rpois(T, 30000)
+## 
+## # Deltas (the fixed part of utility for each product)
+## delta &lt;- alpha*price + X_long %*% beta + xi
+## delta_mat &lt;- matrix(delta[,1], T, J, byrow = T)
+## 
+## # random shocks. (alpha_shocks, beta_shocks) = z_t for generation
+## z &lt;- matrix(rnorm(NS*(P+1)), NS, P+1)
+## 
+## # Empty market shares. Mat is for the observed products; sales is for all goods including the outside good
+## shares_mat &lt;- matrix(NA, T, J)
+## sales &lt;-  matrix(NA, T, J+1)
+## 
+## # Loop through each matrix and generate sales for each product
+## for(i in 1:T) {
+##   
+##   # Latent utility matrix
+##   utility &lt;- matrix(NA, NS, J)
+##   # Create the random component of the (alpha, beta) vector
+##   random_effects &lt;-  z %*% chol(Sigma)
+##   
+##   # monte carlo integration
+##   for(n in 1:NS){
+##     utility[n,] &lt;-t( exp(delta_mat[i,] + cbind(price_mat[i,], X) %*% random_effects[n,]))
+##     utility[n,] &lt;- utility[n,]/(1 + sum(utility[n,]))
+##   }
+##   shares_mat[i,] &lt;- colMeans(utility)
+##   
+##   # Now we&#39;re going to observe the shares with measurement error
+##   # Last column is the outside good
+##   sales[i,] &lt;- rmultinom(1, market_size[i], c(shares_mat[i,], 1 - sum( shares_mat[i,])))
+## }
+## </code></pre></div>
+<p>It should be pointed out that here <span class="math inline">\(\xi_{jt}\)</span> and <span class="math inline">\(p\)</span> are correlated. This should introduce endogeneity problems in the model.</p>
+</div>
+<div id="part-3-writing-out-the-model-in-stan" class="section level2">
+<h2><span class="header-section-number">4.3</span> Part 3: Writing out the model in Stan</h2>
+<p>Below we implement the model described above in Stan.</p>
+<p>A couple of things to look out for in the code:</p>
+<ol style="list-style-type: decimal">
+<li>We pass <span class="math inline">\(z_{t}\)</span> in as two sets of shocks, one for <span class="math inline">\(\alpha\)</span> and one for <span class="math inline">\(\beta\)</span>. There’s no good reason for this.</li>
+<li>We stack <span class="math inline">\(X\)</span>, a <span class="math inline">\(J\times P\)</span> characteristic matrix, <span class="math inline">\(T\)</span> times. In the DGP above, we assume that a product has the same characteristics in each market. In reality, we would assume that things like advertising would vary across markets.</li>
+<li>Although we simulate the price above with instruments, below we don’t use the instruments at all for estimation of the model.</li>
+</ol>
+<pre><code>// our Stan model, saved as vsb.stan
+// first we define the function that takes data and parameters and returns predicted market shares
+functions {
+  // calculates shares for a given market
+  row_vector shares(real alpha, vector beta, matrix bigX, matrix Sigma, row_vector xi, matrix z) {
+    matrix[rows(z), cols(xi)+1] utilities;
+    matrix[rows(z), cols(xi)+1] probs;
+    row_vector[cols(xi)+1] shares;
+    // 1. Rather than pass in p and x separately, we&#39;ll pass in bigX = append_col(p, X)
+    // 2. append alpha_shock, beta_shock
+    {
+      matrix[rows(z), cols(xi)] tmp;
+      
+      tmp = rep_matrix((bigX*append_row(alpha, beta) + xi&#39;)&#39;, rows(z));
+      
+      // replace the append_col wing single values (might speed things up)
+      utilities[1:rows(z), 1:cols(xi)] = tmp + z * cholesky_decompose(Sigma)&#39; * bigX&#39;;
+      
+      utilities[1:rows(z),cols(utilities)] = rep_vector(0.0, rows(z));
+      
+      for(i in 1:rows(z)) {
+         probs[i] = softmax(utilities[i]&#39;)&#39;;
+      }
+      
+    }
+    
+    for(j in 1:cols(probs)) {
+      shares[j] = mean(col(probs, j));
+    }
+    
+    return(shares);
+  }
+}
+// next define our data
+data {
+  int NS; // number of individuals in integration
+  int J; // number of products
+  int T; // number of markets
+  int P; // number of features
+  matrix[NS, P+1] z; // normal(0,1) draws of the shocks
+  matrix[T, J] price; // price for each unit
+  int sales[T, J+1]; // unit sales across T markets for J+1 products (inc outside good)
+  matrix[T*J, P] X_repeat; // T Xs stacked on top of each other. This format allows characteristics to vary across markets.
+  real nu;
+}
+// next join the product data together into single matrices
+transformed data {
+  matrix[T*J, P+1] bigX;
+  bigX = append_col(to_vector(price&#39;), X_repeat);
+}
+// define parameters
+parameters {
+  real alpha; 
+  vector[P] beta;
+  vector[P] gamma;
+  real gamma0;
+  real&lt;lower = 0&gt; price_scale;
+  matrix[T, J] xi;
+  vector&lt;lower = 0&gt;[P+1] scales;
+  corr_matrix[P+1] Omega;
+  real&lt;lower = 0&gt; lambda;
+}
+
+transformed parameters {
+  cov_matrix[P+1] Sigma;
+  Sigma = quad_form_diag(Omega, scales);
+}
+// and the model
+model {
+  // priors
+  alpha ~ normal(0, 1);
+  beta ~ normal(0, 1);
+  gamma0 ~ normal(0, 3);
+  gamma ~ normal(0, 3);
+  price_scale ~ normal(0, 1);
+  lambda ~ normal(0, 1);
+  to_vector(xi) ~ normal(0, 1);
+  scales ~ normal(0, 1);
+  Omega ~ lkj_corr(nu);
+  
+  // model of price -- this helps pin down xi
+  for (i in 1:rows(to_vector(price&#39;))) {
+    to_vector(price&#39;)[i] ~ normal(gamma0 + X_repeat[i] * gamma + lambda * to_vector(xi&#39;)[i], price_scale) T[0,];
+  }
+  
+  
+  // model of sales 
+  {
+    matrix[T, J+1] pred_shares;
+    for(t in 1:T) {
+      // predicted market shares given data and parameters
+      pred_shares[t] = shares(alpha, beta, bigX[(t*J-J+1):(t*J)], Sigma, xi[t], z);
+      // sales are measured with multinomial measurement error
+      sales[t] ~ multinomial(pred_shares[t]&#39;);
+    }
+    
+  }
+}
+</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## 
+## # run model ---------------------------------------------------------------
+## 
+## # Compile Stan function to check that it generates sensible shares
+## 
+## library(rstan)
+## options(mc.cores = parallel::detectCores())
+## 
+## data_list &lt;- list(NS = nrow(z), 
+##                   J = J, 
+##                   T = T, 
+##                   P = P, 
+##                   z = z, 
+##                   price = price_mat, 
+##                   sales = sales,
+##                   X_repeat = X_long,
+##                   nu = 3)
+## 
+## # Compile the model
+## compiled_model &lt;- stan_model(&quot;vsb.stan&quot;)
+## 
+## # For the sake of time, we estimate this using optimization
+## test_optim &lt;- optimizing(compiled_model, data = data_list)
+## </code></pre></div>
+<p>Now how did the model go at recapturing known demand shocks?</p>
+<p>And how about the structural parameters?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Omegas &lt;- test_optim$par[grepl(&quot;Omega&quot;, names(test_optim$par))]
+## Scales &lt;- test_optim$par[grepl(&quot;^scale&quot;, names(test_optim$par))]
+## pars &lt;- c(test_optim$par[1:(P+1)], Omegas, Scales)
+## true_values &lt;- c(alpha, beta, as.vector(Omega), scales)
+## 
+## data_frame(Estimates = pars, 
+##            `True values` = true_values,
+##            Parameter = c(&quot;alpha&quot;, rep(&quot;beta&quot;, P), rep(&quot;Omega&quot;, (P+1)^2), rep(&quot;scale&quot;, P+1) )) %&gt;% 
+##   ggplot(aes(x = `True values`, y = Estimates)) + 
+##   geom_point(aes(colour = Parameter)) + 
+##   geom_abline(aes(intercept = 0, slope = 1)) +
+##   theme_economist() +
+##   labs(title = &quot;Estimates and true values\nof structural parameters&quot;)</code></pre></div>
+<p><strong><em>Voila!</em></strong>.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2><span class="header-section-number">4.4</span> Conclusion</h2>
+<p>What we’ve done above is shown that it can be extremely simple to express a random coefficients logit model with measurement error using a latent factor approach, and importantly, without any instruments. This is a pretty radical departure from the most popular methods in the literature.</p>
+<p>The other big advantage is that, given you have enough computation time, the model can be estimated using Bayesian techniques. In the code above, we could do this by using <code>sampling()</code> rather than <code>optimizing</code>. With the current code, this is quite slow, but does generate robust parameter estimates. If your decision problem requires genuine estimates of uncertainty around the structural parameters, I’d recommend experimenting using optimization, and then using HMC (<code>sampling</code>) for the production run of the model. In my experiments, I’ve found they generate similar point-estimates.</p>
+
+<div id="refs" class="references">
+<div>
+<p>Meager, Rachael. 2016. “Aggregating Distributional Treatment Effects: A Bayesian Hierarchical Analysis of the Microcredit Literature.”</p>
+</div>
+<div>
+<p>Rubin, D. 1981. “Estimation in Parallel Randomized Experiments.” <em>Journal of Education Statistics</em> 6. American Educational Research Association; American Statistical Association: 377–401.</p>
+</div>
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="vsb.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"google": false,
+"weibo": false,
+"instapper": false,
+"vk": false,
+"all": ["facebook", "google", "twitter", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"download": ["Shortcourse.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    if (location.protocol !== "file:" && /^https?:/.test(script.src))
+      script.src  = script.src.replace(/^https?:/, '');
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
