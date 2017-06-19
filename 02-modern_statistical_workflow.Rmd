@@ -163,45 +163,68 @@ known values for the unknowns. This mightn't seem very useful when you're workin
 simple models, but as your models become more complex, it's an extremely step. 
 
 There are two broad approaches to simulating your model with known parameters. The first is to 
-hard-code the parameter values
+hard-code the parameter values. This is fairly straightforward, and may be prefered when 
+some parameter combinations result in unidentifiable models but it's hard to define priors that 
+place zero weight on such parameter combinations. A classic case of this is with time-series models, 
+for which some parameter combinations result in an explosive time-series, but those parameter combinations
+do not have natural priors that would constrain them to be stationary.
 
-Now that we have written out the data generating model, let's generate some known parameters and covariates and simulate the model. First: generate some values for the data and paramaters.
+The second approach is more robust, but it applies to a smaller set of models. In this approach we 
+draw values of the unknowns directly from the priors, and then simulate data. This approach has several
+large benefits. First, it helps you get a sense for how reasonable your priors are. Quite recently, some colleagues
+and I were playing around with latent variables in high-dimensioned classification models of the form
+
+$$
+y \sim \mbox{categorical}(\mbox{softmax}(\theta))
+$$
+where the softmax of $\theta$ is $\frac{\exp(\theta)}{\sum\exp(\theta)}$. Let's say that $y$ can take
+100 values and we have a diffuse prior $\theta \sim \mbox{normal}(0, 100)$. What does the distribution of
+probabilities look like for this process?
+
+```{r, echo = F}
+softmax <- function(x) exp(x)/sum(exp(x))
+hist(softmax(rnorm(100, 0, 100)))
+```
+
+Unless you think that one outcome is certain and the others have probability zero, 
+a $\mbox{normal}(0, 100)$ prior is clearly unreasonable. On the other hand, what if we 
+were to use $\mbox{normal}(0, 1)$?
+
+```{r, echo = F}
+softmax <- function(x) exp(x)/sum(exp(x))
+hist(softmax(rnorm(100, 0, 1)))
+```
+
+This is a far more reasonable looking distribution of probabilities. 
+
+Let's generate some known parameters and covariates and simulate our AR model. 
 
 
 ```{r}
-# Generate a matrix of random numbers, and values for beta, nu and sigma
 
-set.seed(48) # Set the random number generator seed so that we get the same parameters
-N <- 500 # Number of observations
-P <- 5 # Number of covariates
-X <- matrix(rnorm(N*P), N, P) # generate an N*P covariate matrix of random data
-Z <- rnorm(N) # an instrument
+T <- 500
+alpha <- 0
+beta <- c(0.3, 0, 0, 0, 0, .6)
+sigma <- 1  
 
-# The parameters governing the residuals
-sigma <- c(1, 2)
-Omega <- matrix(c(1, .5, .5, 1), 2, 2)
+Y_raw <- NULL
 
-# Generate some residuals
-resid <- MASS::mvrnorm(N, mu = c(0, 0), Sigma = diag(sigma)%*% Omega %*% diag(sigma))
+Y_raw[1:6] <- rnorm(6, alpha)
+for(i in 7:T) {
+  Y_raw[i] <- rnorm(1,  alpha + Y_raw[(i-6):(i-1)] %*% beta, sigma)
+}
 
-# Now the parameters of our model
-beta <- rnorm(P)
-tau <- 1 # This is the treatment effect we're looking to recover
-alpha_1 <- rnorm(1)
-alpha_2 <- rnorm(1)
-gamma <- rnorm(P)
-delta <- rnorm(1)
+plot.ts(Y_raw)
 
-mu_2 <- alpha_1 + X%*%gamma + Z*delta
-mu_1 <- alpha_2 + X%*%beta + mu_2*tau
+# Set some values to NA (Stan doesn't like NA, so we use some weird number)
 
-Y <- as.numeric(mu_1 + resid[,1])
-endog_regressor <- as.numeric(mu_2 + resid[,2])
+Y_raw[sample(1:T,20)] <- NA
 
-# And let's check we can't recapture with simple OLS: 
+plot.ts(Y_raw)
 
-lm(Y ~ . + endog_regressor, data = as.data.frame(X))
+Y_raw[is.na(Y_raw)] <- -9
 
+N_missing <- 20
 ```
 
 
@@ -211,167 +234,86 @@ lm(Y ~ . + endog_regressor, data = as.data.frame(X))
 options(warn=-1, message =-1)
 library(dplyr); library(ggplot2); library(rstan); library(reshape2)
 options(mc.cores = parallel::detectCores())
-```
-
-
-Now we have $y$ and $X$, and we want to estimate $\beta$, $\sigma$ and, depending on the model, $\nu$. We have two candidate probability models that we want to estimate and check which one is a more plausible model of the data. To do this, we need to specify both models in Stan and then estimate them.
-
-Let's jump straight in and define the incorrectly specified model. It is incorrect in that we haven't properly accounted
-for the mutual information in first and second stage regressions. 
 
 ```
-// saved as models/independent_iv.stan
-// saved as models/independent_iv.stan
+
+Next we write out our Stan model. This one is a little involved so let's step through it slowly
+
+```
+// saved as ar_model_missing_data.stan
 data {
-  int N; // number of observations
-  int P; // number of covariates
-  matrix[N, P] X; //covariate matrix
-  vector[N] Y; //outcome vector
-  vector[N] endog_regressor; // the endogenous regressor
-  vector[N] Z; // the instrument (which we'll assume is a vector)
+  int T; // number of observations
+  int P; // number of lags
+  int N_missing; // the number of missing values
+  vector[T] Y_raw; // the time series
 }
 parameters {
-  vector[P] beta; // the regression coefficients
-  vector[P] gamma;
-  real tau;
-  real delta;
-  real alpha_1;
-  real alpha_2;
-  vector<lower = 0>[2] sigma; // the residual standard deviation
-  corr_matrix[2] Omega;
+  real alpha;
+  vector[P] beta;
+  vector<lower = 0>[P] lambda;
+  real<lower = 0> tau;
+  vector[N_missing] missing;
+  real<lower = 0> sigma;
 }
 transformed parameters {
-  matrix[N, 2] mu;
-  
-  for(i in 1:N) {
-    mu[i,2] = alpha_1 + X[i]*gamma + Z[i]*delta;
-    mu[i,1] = alpha_2 + X[i]*beta + mu[i,2]*tau;
-  }
-}
-model {
-  // Define the priors
-  beta ~ normal(0, 1); 
-  gamma ~ normal(0, 1);
-  tau ~ normal(0, 1);
-  sigma ~ cauchy(0, 1);
-  delta ~ normal(0, 1);
-  alpha_1 ~ normal(0, 1);
-  alpha_2 ~ normal(0, 2);
-  Omega ~ lkj_corr(5);
-  
-  // The likelihood
-  for(i in 1:N) {
-    Y[i]~ normal(mu[i], sigma[1]);
-    endog_regressor[i]~ normal(mu[2], sigma[2]);
-  }
-
-  
-}
-generated quantities {
-  // For model comparison, we'll want to keep the likelihood
-  // contribution of each point
-
-  vector[N] log_lik;
-  for(i in 1:N) {
-    log_lik[i] = normal_lpdf(Y[i] | alpha_1  + X[i,] * beta + endog_regressor[i]*tau, sigma[1]);
-  }
-}
-
-```
-
-Now we define the correctly specified model. It is the same as above, but with a couple of changes:
-
-```
-// saved as models/joint_iv.stan
-// saved as models/joint_iv.stan
-data {
-  int N; // number of observations
-  int P; // number of covariates
-  matrix[N, P] X; //covariate matrix
-  vector[N] Y; //outcome vector
-  vector[N] endog_regressor; // the endogenous regressor
-  vector[N] Z; // the instrument (which we'll assume is a vector)
-}
-parameters {
-  vector[P] beta; // the regression coefficients
-  vector[P] gamma;
-  real tau;
-  real delta;
-  real alpha_1;
-  real alpha_2;
-  vector<lower = 0>[2] sigma; // the residual standard deviation
-  corr_matrix[2] Omega;
-}
-transformed parameters {
-  matrix[N, 2] mu;
-  
-  for(i in 1:N) {
-    mu[i,2] = alpha_1 + X[i]*gamma + Z[i]*delta;
-    mu[i,1] = alpha_2 + X[i]*beta + mu[i,2]*tau;
-  }
-}
-model {
-  // Define the priors
-  beta ~ normal(0, 1); 
-  gamma ~ normal(0, 1);
-  tau ~ normal(0, 1);
-  sigma ~ cauchy(0, 1);
-  delta ~ normal(0, 1);
-  alpha_1 ~ normal(0, 1);
-  alpha_2 ~ normal(0, 2);
-  Omega ~ lkj_corr(5);
-  
-  // The likelihood
+  vector[T] Y; // 
+  matrix[T, P] X; // lags matrix
   {
-    matrix[N, 2] Y2;
-    Y2 = append_col(Y, endog_regressor);
-    for(i in 1:N) {
-      Y2[i]~ multi_normal(mu[i], diag_matrix(sigma)*Omega*diag_matrix(sigma));
+    int count;
+    count = 0;
+    for(t in 1:T) {
+      if(Y_raw[t] == -9) {
+        count = count + 1;
+        Y[t] = missing[count];
+      } else {
+        Y[t] = Y_raw[t];
+      }
     }
   }
   
-}
-generated quantities {
-  // For model comparison, we'll want to keep the likelihood
-  // contribution of each point
-
-  vector[N] log_lik;
-  for(i in 1:N) {
-    log_lik[i] = normal_lpdf(Y[i] | alpha_1  + X[i,] * beta + endog_regressor[i]*tau, sigma[1]);
+  for(t in 1:T) {
+    if(t<P) {
+      X[t] = rep_row_vector(0, P);
+    } else {
+      X[t] = Y[(t-P):(t-1)]';
+    }
   }
 }
-
+model {
+  // priors
+  
+  lambda ~ cauchy(0, 1);
+  tau ~ cauchy(0, 1);
+  beta ~ normal(0, tau*lambda);
+  sigma ~ cauchy(0, 1);
+  
+  // likelihood
+  Y ~ normal(alpha + X*beta, sigma);
+}
 ```
 
-Now that we have specified two models, let's estimate them with the $y$ and $X$ we generated above.
 
 
-```{r, results = "hide", eval= F}
+```{r, eval= T}
 # In R
 
-compiled_model <- stan_model("")
+compiled_model <- stan_model("ar_model_missing.stan")
 
-incorrect_fit <- stan(file = "models/independent_iv.stan",
-                      data = list(Y = Y,
-                                  X = X,
-                                  endog_regressor = endog_regressor,
-                                  P = P, 
-                                  N = N,
-                                  Z = Z), 
-                      iter = 600)
+data_list <- list(T = T, 
+                  P = 6, 
+                  Y_raw = Y_raw, 
+                  N_missing = N_missing)
 
-correct_fit <- stan(model_code = "models/joint_iv.stan",
-                    data = list(Y = Y,
-                                X = X,
-                                endog_regressor = endog_regressor,
-                                P = P, 
-                                N = N,
-                                Z = Z),
-                    iter = 600)
+model <- sampling(compiled_model,
+              data_list,
+              iter = 1000,
+              chains = 4)
+
+print(model, pars = c("alpha", "beta", "sigma"))
 ```
 
 
-We have now fit our two competing models to the data. What has been estimated?
+We have now fit our model to the fake data. What has been estimated?
 
 #### What do these fitted objects contain?
 
@@ -401,12 +343,6 @@ There is one hitch, though.  For almost any practically useful model, not only w
 Stan is able to calculate the effective sample size for its MCMC methods and use that to estimate standard errors for all of its predictive quantities, such as parameter and event probability estimates.
 
 A fitted Stan object contains a sequence of $M$ draws, where each draw contains a value for every parameter (and generated quantity) in the model.  If the computation has converged, as measured by built-in convergence diagnostics, the draws are from the posterior distribution of our parameters conditioned on the observed data.  These are draws from the joint posterior distribution; correlation between parameters is likely to be present in the joint posterior even if it was not present in the priors.
-
-In the generated quantities block of the two models above, we declare variables for two additional quantities of interest.
-
-- The first, `log_lik`, is the log-likelihood, which we use for model comparison.  We obtain this value for each parameter draw, for each value of $y_{i}$. Thus if you have $N$ observations and `iter` parameter draws, this will contain $N\times$ `iter` log-likelihood values (which may produce a lot of output for large data sets).
-
-- The second, `y_sim`, is a _posterior predictive quantity_, in this case a replicated data set consisting of a sequence of fresh outcomes generated randomly from the parameters. Rather than each observation having a "predicted value", it has a predictive distribution that takes into account both the regression residual and uncertainty in the parameter estimates.
 
 
 ### Model inspection
@@ -468,125 +404,51 @@ before they are used for making inferences.
 
 
 
-### Model comparison
+### Taking the model to real data
 
-Let's start by looking at the model outputs. The draws from each parameter can be neatly summarized with `print`:
+Now we have fit the model to some fake data and successfully been able to recover "known unknowns", 
+we can fit the model to our real data. 
+
+```{r}
+
+# Set up our data
+
+compiled_model <- stan_model("ar_model_missing.stan")
+
+KPI_data$kpi_value[is.na(KPI_data$kpi_value)] <- -9
+
+KPI_data$kpi_value[140:149] <- -9
+
+data_list_real <- list(T = nrow(KPI_data),
+                       P = 7, 
+                       Y_raw = KPI_data$kpi_value,
+                       N_missing = sum(KPI_data$kpi_value == -9))
+
+model_fit_real <- sampling(compiled_model, 
+                           data_list_real, 
+                           iter = 1000)
 
 
-```{r, eval = F}
-# In R:
 
-print(incorrect_fit, pars = c("beta", "tau", "sigma"))
-# specify parameters to save; else we'd get `log_lik` and `y_sim`
+# And now we can plot our forecasts! 
+model_fit_real %>% 
+  as.data.frame() %>% 
+  select(contains("Y[")) %>% 
+  reshape2::melt() %>% 
+  group_by(variable) %>% 
+  summarise(lower = quantile(value, .25),
+            upper = quantile(value, .75),
+            median = median(value)) %>%
+  mutate(actuals = KPI_data$kpi_value,
+         actuals = ifelse(actuals==-9, NA, actuals),
+         date = KPI_data$date) %>% 
+  ggplot(aes(x = date)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), fill = "orange", alpha = 0.4) +
+  geom_line(aes(y = median)) +
+  ggthemes::theme_hc() +
+  ggtitle("Median forecast for our KPI series")
 
-# Some things to note:
-
-# - mean is the mean of the draws for each observation
-# - se_mean is the Monte Carlo error
-#   (standard error of the Monte Carlo estimate from the true mean)
-# - sd is the standard deviation of the parameter's draws
-# - the quantiles are self-explanatory
-# - n_eff is the effective number of independent draws.
-#   If there is serial correlation between sequential draws,
-#   the draws cannot be considered independent.
-#   In Stan, high serial correlation is typically a problem in
-#   poorly specified models
-# - Rhat: this is the Gelman Rubin convergence diagnostic.
-#   Values close to 1 indicate that the multiple chains
-#   that you estimated have converged to the same
-#   distribution and are "mixing" well.
 ```
-
-
-
-```{r, eval = F}
-# In R
-
-print(correct_fit, pars = c("beta", "sigma", "nu"))
-```
-
-
-At the moment, it seems as though both our models have done about as good a job at estimating the regression coefficients $\beta$ as one another. But the incorrectly specified model severely overestimates $\sigma$. This makes sense--a Student-t distribution with $\nu=5$ will have fat tails, and so a normal distribution will try to replicate the extreme values by having a large variance.
-
-How else might we compare the two models?
-
-One approach is to use the `loo` package to compare the models on their
-estimated out-of-sample predictive performance. The idea of this package is to
-approximate each model's leave-one-out (LOO) cross-validation error, allowing
-model comparison by the LOO Information Criterion (LOOIC). LOOIC has the same
-purpose as the Akaike Information Criterion (AIC), which is to estimate the
-expected log predictive density (ELPD) for a new dataset. However, AIC ignores
-prior distributions and makes the assumption that the posterior is a
-multivariate normal distribution. The approach taken by the `loo` package does
-not make this distributional assumption and also integrates over (averages over)
-the uncertainty in the parameters.
-
-The Bayesian LOO estimate is
-$\sum_{n = 1}^{N}\log p(y_{n} \, | \, y_{1}, ..., y_{n-1}, y_{n+1}, ..., y_{N})$,
-which requires fitting the model $N$ times, each time leaving out one of the $N$
-data points. For large datasets or complex models the computational cost is
-usually prohibitive. The `loo` package does an approximation that avoids
-re-estimating the model and requires only the log-likelihood evaluated at the
-posterior draws of the parameters. The approximation will be good so long as the
-posterior distribution is not very sensitive to leaving out any single
-observation.
-
-A big upside of this approach is that it enables us to generate probabilistic
-estimates of the degree to which each model is most likely to produce the
-best out-of-sample predictions.
-
-We use `loo` like so:
-
-```{r, eval = F}
-# in R
-# 
-# library(loo) # Load the library
-# 
-# # Extract the log likelihoods of both models.
-# # Note that we need to declare log_lik in the generated quantities block
-llik_incorrect <- extract_log_lik(incorrect_fit, parameter_name = "log_lik")
-llik_correct <- extract_log_lik(correct_fit, parameter_name = "log_lik")
-# 
-# # Estimate the leave-one-out cross validation error
-loo_incorrect <- loo(llik_incorrect)
-loo_correct <- loo(llik_correct)
-```
-```{r, results="hold", eval = F}
-# # Print the LOO statistics
-print("Incorrect model")
-print(loo_incorrect)
-```
-```{r, results="hold", eval = F}
-print("Correct model")
-print(loo_correct)
-```
-
-The quantity `elpd_loo` is the expected log pointwise predictive density (ELPD).
-The log pointwise predictive density is easiest to understand in terms of its
-computation. For each data point we compute the log of its average likelihood,
-where the average is computed over the posterior draws. Then we take the sum
-over all of the data points. We can multiply `elpd_loo` by $-2$ to calculate the
-`looic`, which you can think of like AIC or BIC, but coming from our Bayesian
-framework. The $-2$ is not important; it simply converts the value to the
-so-called deviance scale. The value of `p_loo` is the estimated effective number
-of parameters, which is a measure of model complexity. The effective number of
-parameters can be substantially less than the actual number of parameters when
-there is strong dependence between parameters (e.g. in many hierarchical models)
-or when parameters are given informative prior distributions. For further
-details on these quantities, please consult [this
-paper](http://arxiv.org/abs/1507.04544).
-
-```{r, eval = F}
-# Print the comparison between the two models
-print(compare(loo_incorrect, loo_correct), digits = 2)
-```
-
-When using the `compare` function to compare two models the `elpd_diff` gives us
-the difference in the ELPD estimates for the models. A positive `elpd_diff`
-indicates that the second model is estimated to have better out-of-sample
-predictive accuracy than the first, which is precisely what we expect in this
-case. When comparing more than two models the `compare` function will order
-the models by their ELPD estimates.
 
 
 ## Tools of the trade: borrowing from software engineering
