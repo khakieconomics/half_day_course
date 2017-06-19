@@ -1,6 +1,6 @@
 # An introduction to Stan  {#intro}
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(eval = T, message = F, warning = F)
 ```
 

@@ -51,9 +51,13 @@ missing values for the KPI.
 
 Let's walk through each step of the workflow, gradually introducing Stan along the way. First, let's download the data. 
 
-```{r, eval =T}
-library(AER)
-data("CPS1988")
+```{r, eval =T, message = F, warning = F}
+library(readr)
+# Download file from: 
+# https://github.com/khakieconomics/half_day_course/blob/master/KPI_data.csv then
+
+KPI_data <- read_csv("KPI_data.csv")
+
 ```
 
 
@@ -64,72 +68,59 @@ of a generative model as being a structured random number generator, which when 
 generates outcomes with a distribution that looks like the distribution of the outcome variable. 
 Once we have decided on the generative model, we then get into the specifics of endogeneity issues etc. 
 In deciding the choice of distribution to use, you should plot a histogram or density of the 
-outcome. For example, we could generate a histogram of wages like so: 
+outcome. For example, we could generate a histogram of the KPI like so: 
 
-```{r, message = F, warning = F, fig.height=2, fig.width=3, eval = T}
+```{r, message = F, warning = F, eval = T}
 library(ggplot2)
-ggplot(CPS1988, aes(x = log(wage))) +
+ggplot(KPI_data, aes(x = kpi_value)) +
   geom_histogram() + 
-  ggthemes::theme_economist(base_size = 12) +
-  ggtitle("Histogram of log of wages")
+  ggthemes::theme_hc(base_size = 12) +
+  ggtitle("Histogram of KPI values")
 
 ```
 
-As we can see, the distribution of wages is quite skewed, and so we might need to choose a
-distribution capable of generating highly skewed outcomes. Another approach is to transform the data. 
-In this case, because all wages are positive, we could take their natural log. The distribution of log wages
-appears to be far more normal than the initial distribution, and it possible that the non-normality is explainable
-using demographic characteristics. 
+We can also plot the time series
 
-```{r, message = F, warning = F, fig.height=2, fig.width=3, eval = T}
-ggplot(CPS1988, aes(x = log(wage))) +
-  geom_histogram() + 
-  ggthemes::theme_economist(base_size = 12) +
-  ggtitle("Histogram of log of wages")
+```{r, message = F, warning = F, eval = T}
+library(ggplot2)
+
+ggplot(KPI_data, aes(x = date, y = kpi_value)) +
+  geom_line() + 
+  ggthemes::theme_hc(base_size = 12) +
+  ggtitle("Time series plot of KPI values")
+
 
 ```
 
-If we decide to choose a normal density as the data-generating process, and assume that the conditional distribution
-of one person's wage does not depend on the conditional distribution of another person's, we can write it out like so: 
+
+As we can see, the KPI seems to have a bit of a bell-shaped curve, does not seem to be 
+(locally) truncated, and is continuous. It'd make sense to choose a density from a family that 
+has such characteristics, like: 
+
+- Normal
+- Student's t
+- Cauchy
+- Gumbel
+
+
+If we decide to choose a normal density as the data-generating process, and assume that the conditional distribution is an autoregressive model with $p$ lags. 
 
 $$
-\log(\mbox{wage})_{i} \sim \mbox{Normal}(\mu_{i}, \sigma_{i})
+\mbox{kpi}_{t} \sim \mbox{Normal}(\alpha + \beta_{1}\mbox{kpi}_{t-1} + \dots + \beta_{p}\mbox{kpi}_{t-p}, \sigma)
 $$
 
-which says that a person $i$'s wage is distributed according to a normal distribution 
-with _location_ $\mu_{i}$ and _scale_ $\sigma_{i}$. In the case of a normal density, the location is the
+which says that a the value of the KPI is distributed according to a normal distribution 
+with _location_ $\alpha + \beta_{1}\mbox{kpi}_{t-1} + \dots + \beta_{p}\mbox{kpi}_{t-p}$ and _scale_ $\sigma$. In the case of a normal density, the location is the
 mean, and the scale is the standard deviation. We prefer to use "location" and "scale" rather than 
 "mean" and "standard deviation" because the terminology can carry across to other densities whose 
 location and scale parameters don't correspond to the mean or standard deviation. 
 
-Let's be clear about what this means. This generative model says that each individual's (log) wage is not completely
-determined---it involves some amount of luck. So while on average it will be $\mu_{i}$, luck will result in differences
-from this average, and these differences have a standard deviation of $\sigma_{i}$.
 
-Notice that both parameters $\mu_{i}$ and $\sigma_{i}$ vary across each individual. One of the
-main challenges of building a good model is to come up with functional forms for $\mu_{i}$ and $\sigma_{i}$, 
-taking into account the information available to us. For instance, the (normal) linear regression model uses a 
-(row) vector of individual characteristics $X_{i} = (\mbox{education}_{i},\mbox{experience}_{i}, \dots)$, along with
-a set of parameters that are common to all individuals (an intercept $\alpha$, coefficients $\beta$ and a scale parameter $\sigma$). 
-The generative model is then:
-
-$$
-\log(\mbox{wage})_{i} \sim \mbox{Normal}(\alpha + X_{i}\beta, \sigma)
-$$
-which is the same as saying: 
-
-$$
-\log(\mbox{wage})_{i} = \alpha + X_{i}\beta + \epsilon_{i} \mbox{ with } \epsilon_{i} \sim \mbox{N}(0, \sigma)
-$$
-
-
-Note that we've made "modeling assumptions" $\mu_{i} = \alpha + X_{i}\beta$ and $\sigma_{i} = \sigma$. 
-The parameters of the generative model are both "true" and unknown. The entire point is to peform inference
-in order to get probabilistic estimates of the "true" parameters. 
+The parameters of the generative model are both "true" and unknown. The entire point is to peform inference in order to get probabilistic estimates of the "true" parameters. 
 
 #### Choosing the right generative model
 
-Above, we picked out a normal density for log wages (which corresponds to a lognormal density for wages) as 
+Above, we picked out a normal density for the conditional distribution of the KPI. 
 a reasonable first step in modeling our wage series. How did we get to this choice? The choice of distribution 
 to use should depend on the nature of your outcome variables. Two good rules of thumb are: 
 
@@ -141,79 +132,17 @@ give weight to non-integer outcomes. And  so on.
 
 #### Choosing priors
 
-To complete our probability model, we need to specify priors for the parameters $\beta$ and $\sigma$. Again, these priors should place positive probabilistic weight over values of the parameters that
+To complete our probability model, we need to specify priors for the parameters $\alpha$, $\beta$ and $\sigma$. Again, these priors should place positive probabilistic weight over values of the parameters that
 we consider possible, and zero weight on impossible values (like a negative scale $\sigma$). In this case, 
 it is common to assume normal priors for regression coefficients and half-Cauchy or half-Student-t priors on scales. 
 
 A great discussion of choosing priors is available [here](github.com/stan-dev/wiki). 
 
-#### Thinking ahead: are our data endogenous? Instrumental variables
+In this case, we don't know how many lags to include. One approach is to use the so-called _Horseshoe prior_, 
+a prior that shrinks coefficients on uninformative parameters very strongly towards zero, without having a large effect on the 
+remaining coefficients. This is similar in spirit to LASSO or Ridge Regression. 
 
-As you will see in the generative model above, $\epsilon$ are as though they've been drawn from a (normal) random 
-number generator, and have no systematic relationship to the variables in X. Now what is the economic meaning
-of $\epsilon$? The way I prefer to think about it is as a catch-all containing the unobserved information that is
-relevant to the outcome. 
 
-We need to think ahead: is there unobserved information that will be systematically correlated with $X$? Can
-we tell a story that there are things that cause both some change in one of our $X$ variables and also our
-observed wages? If such information exists, then at the model estimation stage we will  have an unobserved 
-confounder problem, and we need to consider it in our probability model. A common way of achiving this is to 
-use instrumental variables. 
-
-An instrumental variable is one that introduces plausible exogenous variation into our endogenous regressor. 
-For example, if we have years of education on the right hand side, we might be concerned that the same 
-sorts of unobserved factors---family and peer pressure, IQ etc.---that lead to high levels of education 
-might also lead to high wages (even in absense of high levels of education). In this case we would want 
-to "instrument" education, ideally with an experimental treatment that randomly assigned some people to 
-higher rates of education and others to less. In reality, such an experiment might not be possible to run, 
-but we might find "natural experiments" that result in the same variation. The most famous case of such
-an instrument is the Vietnam war draft (Angrist and Kreuger, 1992). 
-
-There are a few ways of incorporating instrumental variables. The first is so-called "two stage least squares"
-in which we first regress the endogenous regressor on the exogenous regressors ($X_{edu,i}$) plus an instrument or instruments $Z_{i}$. 
-In the second stage we replace the actual values of education with the fitted values from the first stage. 
-
-Stage one: 
-
-$$
-\mbox{education}_{i} \sim \mbox{Normal}(\alpha_{s1} + X_{-edu,i}\gamma + Z_{i}\delta, \sigma_{s1})
-$$
-Stage two: 
-
-$$
-\log(wage_{i})  \sim \mbox{Normal}(\alpha_{s2} + X_{-edu,i}\beta + (\alpha_{s1} + X_{-edu,i}\gamma + Z_{i}\delta)\tau, \sigma_{s2})
-$$
-(In the second stage, we only estimate $\alpha_{s2}, \beta, \tau$ and $\sigma_{s2}$; the other parameters' values are from
-the first stage). 
-
-If we treat the uncertainty of the first model approproately in the second (as is automatic in Bayes), then two stage
-least squares yields an consistent estimate of the treatment effect $\tau$ (that is, as the number of observations grows,
-we get less bias). But it may be inefficient in the case when the residuals of the data generating processes in stage one
-and stage two are correlated. 
-
-The second method of implementing instrumental variables is as a simultaneous equations model. Under this framework, 
-the generative model is 
-
-$$
-(\log(wage_{i}), \mbox{edu}_{i})' \sim \mbox{Multi normal}\left((\mu_{1,i}, \mu_{2, i})', \Sigma\right)
-$$
-where
-
-$$
-\mu_{1,i} = \alpha_{s2} + X_{-edu,i}\beta + (\alpha_{s1} + X_{-edu,i}\gamma + Z_{i}\delta)\tau
-$$
-and 
-$$
-\mu_{2,i} = \alpha_{s1} + X_{-edu,i}\gamma + Z_{i}\delta
-$$
-You will see: this is the same as the two stage least squares model above, exept we have allowed the errors to be
-correlated across equations (this information is in the covariance matrix $\Sigma$). Nobody really understands
-raw numbers from Covariance matrices, so we typically decompose covariance into the more interpretable  
-scale vector $\sigma$ and correlation matrix $\Omega$ such that $\Sigma = \mbox{diag}(\sigma)\Omega \mbox{diag}(\sigma)$.
-This decomposition also allows us to use more interpretable priors. 
-
-We now have two possible models. What we'll do below is simulate data from the second model with known parmaters. 
-Then we'll code up both models and estimate each, allowing us to perform model comparison. 
 
 ### Step 2: Simulating the model with known parameters
 
