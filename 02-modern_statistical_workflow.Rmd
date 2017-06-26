@@ -136,7 +136,7 @@ To complete our probability model, we need to specify priors for the parameters 
 we consider possible, and zero weight on impossible values (like a negative scale $\sigma$). In this case, 
 it is common to assume normal priors for regression coefficients and half-Cauchy or half-Student-t priors on scales. 
 
-A great discussion of choosing priors is available [here](github.com/stan-dev/wiki). 
+A great discussion of choosing priors is available [here](https://github.com/stan-dev/stan/wiki/Prior-Choice-Recommendations). 
 
 In this case, we don't know how many lags to include. One approach is to use the so-called _Horseshoe prior_, 
 a prior that shrinks coefficients on uninformative parameters very strongly towards zero, without having a large effect on the 
